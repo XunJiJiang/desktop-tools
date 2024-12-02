@@ -1,0 +1,7 @@
+# max_width = 100 # 每行的最大宽度
+tab_spaces = 2 # 每个制表符的空格数
+indentation_style = "Spaces" # "制表符Tab"、"空格Spaces" 或 "自动Auto"
+newline_style = "Unix" # "Unix"、"Windows" 或 "Auto" 行尾序列
+attr_value_brace_style = "WhenRequired" # "Always"、"AlwaysUnlessLit"、"WhenRequired" 或 "Preserve"
+Macro_names = [ "leptos::view", "view" ] # 将被格式化的宏名称
+Closing_tag_style = "Preserve" # "Preserve"、"SelfClosing" 或 "NonSelfClosing"
