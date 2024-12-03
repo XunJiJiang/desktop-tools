@@ -1,4 +1,9 @@
 import { defineConfig } from 'vite'
+import { resolve, join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = join(dirname(fileURLToPath(import.meta.url)))
+const joinTo = (...paths: string[]) => resolve(__dirname, ...paths)
 
 const host = process.env.TAURI_DEV_HOST
 
@@ -23,6 +28,11 @@ export default defineConfig(async () => ({
     watch: {
       // 3. tell vite to ignore watching `src-tauri`
       ignored: ['**/src-tauri/**']
+    }
+  },
+  resolve: {
+    alias: {
+      '@': joinTo(`src`)
     }
   }
 }))

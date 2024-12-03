@@ -13,7 +13,25 @@ const joinTo = (...paths) => resolve(__dirname, ...paths)
 
 export default [
   {
-    files: ['**/*.{ts}']
+    files: ['**/*.{ts}'],
+    settings: {
+      'import/resolver': {
+        vite: {
+          viteConfig: {
+            resolve: {
+              alias: {
+                '@': joinTo('src')
+              }
+            }
+          }
+        },
+        typescript: {
+          alwaysTryTypes: true
+        },
+        node: true,
+        alias: true
+      }
+    }
   },
   { languageOptions: { globals: globals.browser } },
   pluginJs.configs.recommended,
@@ -23,69 +41,6 @@ export default [
       'eslint-plugin-prettier': prettier,
       'eslint-plugin-import': importPlugin,
       'eslint-import-resolver-alias': resolverAlias
-    }
-  },
-  {
-    files: ['packages/xj/**/*.{ts}'],
-    settings: {
-      'import/resolver': {
-        vite: {
-          viteConfig: {
-            resolve: {
-              alias: {
-                '@': joinTo('packages/xj/src')
-              }
-            }
-          }
-        },
-        typescript: {
-          alwaysTryTypes: true
-        },
-        node: true,
-        alias: true
-      }
-    }
-  },
-  {
-    files: ['packages/shared/**/*.{ts}'],
-    settings: {
-      'import/resolver': {
-        vite: {
-          viteConfig: {
-            resolve: {
-              alias: {
-                '@': joinTo('packages/shared/src')
-              }
-            }
-          }
-        },
-        typescript: {
-          alwaysTryTypes: true
-        },
-        node: true,
-        alias: true
-      }
-    }
-  },
-  {
-    files: ['**/*.test.{ts}'],
-    settings: {
-      'import/resolver': {
-        vite: {
-          viteConfig: {
-            resolve: {
-              alias: {
-                '@test': joinTo('tests')
-              }
-            }
-          }
-        },
-        typescript: {
-          alwaysTryTypes: true
-        },
-        node: true,
-        alias: true
-      }
     }
   },
   eslintConfigPrettier,
