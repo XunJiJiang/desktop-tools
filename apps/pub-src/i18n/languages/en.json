@@ -1,0 +1,14 @@
+{
+  "title": {
+    "search": "Search",
+    "menu": {
+      "file": "File",
+      "edit": "Edit",
+      "selection": "Selection",
+      "view": "View",
+      "go": "Go",
+      "terminal": "Terminal",
+      "help": "Help"
+    }
+  }
+}

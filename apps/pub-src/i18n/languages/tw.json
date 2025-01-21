@@ -1,0 +1,14 @@
+{
+  "title": {
+    "search": "搜尋",
+    "menu": {
+      "file": "檔案",
+      "edit": "編輯",
+      "selection": "選擇",
+      "view": "檢視",
+      "go": "前往",
+      "terminal": "終端",
+      "help": "幫助"
+    }
+  }
+}

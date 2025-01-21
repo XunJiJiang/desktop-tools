@@ -1,0 +1,102 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+dist-electron
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# pnpm
+.pnp/
+.pnp.js
+.pnp.cjs
+.pnpm-store/
+
+# Directories created by pnpm and other package managers
+node_modules/
+.vscode/
+.idea/
+.DS_Store
+dist/
+build/
+.cache/
+tmp/
+out/
+logs/
+
+# Optional npm cache directory
+.npm/
+npm-publish.*
+publish.*
+
+# Ignore lock files
+pnpm-lock.yaml
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+.eslintcache
+
+# Ignore coverage reports
+coverage/
+
+# Ignore environment variables
+.env
+.env.local
+.env.*.local
+
+# Ignore TypeScript cache
+*.tsbuildinfo
+
+# Ignore OS generated files
+Thumbs.db
+*.swp
+
+# Ignore editor specific files
+*.vscode
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.sw?
+
+# Ignore yarn
+.yarn/
+.yarnrc.yml
+yarn.lock
+
+*.log*
+temp
+lib
+example
+dist-ssr
+*.local
+
+**/tests.*
+**/test-*
+**/tests-*
+**/test

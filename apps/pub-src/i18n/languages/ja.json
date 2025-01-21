@@ -1,0 +1,14 @@
+{
+  "title": {
+    "search": "検索",
+    "menu": {
+      "file": "ファイル",
+      "edit": "編集",
+      "selection": "選択",
+      "view": "表示",
+      "go": "移動",
+      "terminal": "端末",
+      "help": "助け"
+    }
+  }
+}

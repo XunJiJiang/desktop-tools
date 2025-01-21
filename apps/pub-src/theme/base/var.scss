@@ -1,0 +1,12 @@
+// Note:
+// 这个文件用来定义全局变量的基本值, 如果当前theme有覆盖, 则会覆盖这里的值
+// 与 default:dark 的值相同
+// tr-bg-color 结尾的变量 透明度可以通过config调整
+
+$body-tr-bg-color: #2f2f2f !default;
+
+$title-bar-bg-color: #2f2f2f90 !default;
+
+$base-font-color-0: #fff !default;
+$base-font-color-1: #cecece !default;
+$base-font-color-2: #979797 !default;
