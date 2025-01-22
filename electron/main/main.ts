@@ -31,9 +31,19 @@ const wins: Map<BrowserWindow, Set<BrowserWindow>> = new Map()
 
 function createWindow(label: string) {
   const win = new BrowserWindow({
+    titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      height: 34
+    },
+    width: 1024,
+    height: 768,
+    minWidth: 400,
+    minHeight: 270,
+    backgroundColor: '#00000000',
+    transparent: true,
     icon: path.join(process.env.VITE_PUBLIC, 'vite.svg'),
     webPreferences: {
-      preload: path.join(__dirname, 'preload', 'preload.mjs')
+      preload: path.join(MAIN_DIST, 'preload.mjs')
     }
   })
 
@@ -54,6 +64,14 @@ function createWindow(label: string) {
       childWin.close()
     })
     wins.delete(win)
+  })
+
+  win.on('focus', () => {
+    win.webContents.send('window:focus')
+  })
+
+  win.on('blur', () => {
+    win.webContents.send('window:blur')
   })
 
   if (VITE_DEV_SERVER_URL) {

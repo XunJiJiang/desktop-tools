@@ -30,25 +30,25 @@ export const getThemesName = async (reload = false) => {
   const themeDirPath = await window.ipcRenderer.invoke(
     'path:join',
     await window.ipcRenderer.invoke('path:get', 'appData'),
-    'themes'
+    'theme'
   )
 
   themesName = []
-  const entries = await window.ipcRenderer.invoke('fs:readDir', themeDirPath, {
+  const entries = await window.ipcRenderer.invoke('fs:readdir', themeDirPath, {
     withFileTypes: true
   })
   for (const entry of entries) {
-    if (entry.isDirectory() && entry.name !== 'default') {
+    if (entry.isDirectory && entry.name !== 'default') {
       const path = await window.ipcRenderer.invoke(
         'path:join',
         themeDirPath,
         entry.name
       )
-      const files = await window.ipcRenderer.invoke('fs:readDir', path, {
+      const files = await window.ipcRenderer.invoke('fs:readdir', path, {
         withFileTypes: true
       })
       for (const file of files) {
-        if (file.isFile() && file.name.endsWith('.json')) {
+        if (file.isFile && file.name.endsWith('.json')) {
           themesName.push([entry.name, file.name.slice(0, -5)])
         }
       }
@@ -78,7 +78,7 @@ export const loadTheme = async (name: string, space: string) => {
   const themeDirPath = await window.ipcRenderer.invoke(
     'path:join',
     await window.ipcRenderer.invoke('path:get', 'appData'),
-    'themes'
+    'theme'
   )
 
   const fullPath = await window.ipcRenderer.invoke(
@@ -91,7 +91,7 @@ export const loadTheme = async (name: string, space: string) => {
   if (await hasTheme(name, space, fullPath)) {
     try {
       let theme = JSON.parse(
-        await window.ipcRenderer.invoke('fs:readFile', fullPath, {
+        await window.ipcRenderer.invoke('fs:readfile', fullPath, {
           encoding: 'utf-8'
         })
       ) as {
@@ -103,14 +103,18 @@ export const loadTheme = async (name: string, space: string) => {
             ? {}
             : theme['extends'] === 'default:light'
               ? JSON.parse(
-                  await readTextFile(
-                    await resolveResource('assets/themes/default/light.json')
-                  )
+                  await window.ipcRenderer.invoke('fs:resources', [
+                    'default',
+                    'theme',
+                    'light.json'
+                  ])
                 )
               : JSON.parse(
-                  await readTextFile(
-                    await resolveResource('assets/themes/default/dark.json')
-                  )
+                  await window.ipcRenderer.invoke('fs:resources', [
+                    'default',
+                    'theme',
+                    'dark.json'
+                  ])
                 )
         theme = { ...extendsTheme, ...theme }
       }
@@ -188,7 +192,7 @@ const checkTransparency = (
  * @param fullPath theme fullPath (absolute to $APPDATA/themes/**)
  */
 const hasTheme = async (name: string, space: string, fullPath: string) => {
-  if (await exists(fullPath)) {
+  if (await window.ipcRenderer.invoke('fs:exists', fullPath)) {
     return true
   } else {
     if (space === 'default') {
@@ -204,21 +208,38 @@ const hasTheme = async (name: string, space: string, fullPath: string) => {
  * Reload all default themes
  */
 export const reloadDefaultThemes = async () => {
-  const themeDirPath = await join(await appDataDir(), 'themes')
+  const themeDirPath = await window.ipcRenderer.invoke(
+    'path:join',
+    await window.ipcRenderer.invoke('path:get', 'appData'),
+    'theme'
+  )
 
-  await mkdir(await join(themeDirPath, 'default'), {
-    recursive: true
-  })
+  await window.ipcRenderer.invoke(
+    'fs:mkdir',
+    await window.ipcRenderer.invoke('path:join', themeDirPath, 'default'),
+    {
+      recursive: true
+    }
+  )
 
   try {
     for (const name of defaultThemesName) {
-      const resourcePath = await resolveResource(
-        'assets/themes/default/' + name + '.json'
+      const theme = JSON.parse(
+        await window.ipcRenderer.invoke('fs:resources', [
+          'default',
+          'theme',
+          name + '.json'
+        ])
       )
-      const theme = JSON.parse(await readTextFile(resourcePath))
 
-      await writeTextFile(
-        await join(themeDirPath, 'default', name + '.json'),
+      await window.ipcRenderer.invoke(
+        'fs:writefile',
+        await window.ipcRenderer.invoke(
+          'path:join',
+          themeDirPath,
+          'default',
+          name + '.json'
+        ),
         JSON.stringify(theme, null, 2)
       )
     }
@@ -241,19 +262,41 @@ export const reloadDefaultThemes = async () => {
  * @param fullPath theme fullPath (absolute to $APPDATA/themes/**)
  */
 const loadDefaultTheme = async (name: string, fullPath: string) => {
-  const themeDirPath = await join(await appDataDir(), 'themes')
+  const themeDirPath = await window.ipcRenderer.invoke(
+    'path:join',
+    await window.ipcRenderer.invoke('path:get', 'appData'),
+    'theme'
+  )
 
-  await mkdir(await join(themeDirPath, 'default'), {
-    recursive: true
-  })
+  await window.ipcRenderer.invoke(
+    'fs:mkdir',
+    await window.ipcRenderer.invoke('path:join', themeDirPath, 'default'),
+    {
+      recursive: true
+    }
+  )
 
   try {
-    const resourcePath = await resolveResource(
-      'assets/themes/default/' + name + '.json'
+    const resourcePath = await window.ipcRenderer.invoke(
+      'fs:resource',
+      'default',
+      'theme',
+      name + '.json'
     )
-    const theme = JSON.parse(await readTextFile(resourcePath))
+    const theme = JSON.parse(
+      await window.ipcRenderer.invoke('fs:readfile', resourcePath, {
+        encoding: 'utf-8'
+      })
+    )
 
-    await writeTextFile(fullPath, JSON.stringify(theme, null, 2))
+    await window.ipcRenderer.invoke(
+      'fs:writefile',
+      fullPath,
+      JSON.stringify(theme, null, 2),
+      {
+        encoding: 'utf-8'
+      }
+    )
   } catch (e) {
     if (isThemeError(e)) {
       throw e

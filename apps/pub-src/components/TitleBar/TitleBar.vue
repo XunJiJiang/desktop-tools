@@ -1,15 +1,14 @@
 <script lang="ts">
 import { onUnmounted, ref, shallowRef } from 'vue'
-import { WindowControls } from '@tauri-controls/vue'
 import config from '@apps/utils/config'
 import logo from '@apps/assets/img/logo.svg'
-import { getCurrentWindow } from '@tauri-apps/api/window'
-const appWindow = getCurrentWindow()
+// import { getCurrentWindow } from '@tauri-apps/api/window'
+// const appWindow = getCurrentWindow()
 </script>
 
 <script lang="ts" setup>
-import ControllerMacOS from './ControllerMacOS.vue'
-import ControllerWindows from './ControllerWindows.vue'
+// import ControllerMacOS from './ControllerMacOS.vue'
+// import ControllerWindows from './ControllerWindows.vue'
 import MenuBar from './MenuBar.vue'
 import SearchBar from './SearchBar.vue'
 import ActionBar from './ActionBar.vue'
@@ -47,14 +46,12 @@ onUnmounted(() => {
 })
 
 const isFocused = shallowRef(false)
-appWindow.isFocused().then((focused) => {
-  isFocused.value = focused
-})
+
 const unListenFns = Promise.all([
-  appWindow.listen<string>('tauri://blur', () => {
+  window.ipcRenderer.on('window:blur', () => {
     isFocused.value = false
   }),
-  appWindow.listen<string>('tauri://focus', () => {
+  window.ipcRenderer.on('window:focus', () => {
     isFocused.value = true
   })
 ])
@@ -64,38 +61,39 @@ onUnmounted(() => {
 </script>
 
 <template>
-
-  <div :class="{
-    'title-bar': true,
-    'show-menu': showMenu,
-    focused: isFocused,
-    macos: titleBarStyle === 'macos',
-    windows: titleBarStyle === 'windows'
-  }">
-    <div data-tauri-drag-region class="start">
-      <WindowControls v-if="titleBarStyle === 'macos'" platform="macos" key="macos" />
-
+  <div
+    :class="{
+      'title-bar': true,
+      'show-menu': showMenu,
+      focused: isFocused,
+      macos: titleBarStyle === 'macos',
+      windows: titleBarStyle === 'windows'
+    }"
+  >
+    <div class="start">
       <div class="logo" v-if="titleBarStyle === 'windows'">
         <img :src="logo" class="logo" alt="logo" />
       </div>
+
+      <div v-if="titleBarStyle === 'macos'" class="macos-control"></div>
 
       <MenuBar v-if="showMenu" :titleBarStyle="titleBarStyle" :isFocused />
 
       <!-- <div class="placeholder"></div> -->
     </div>
 
-    <div data-tauri-drag-region class="center">
+    <div class="center">
       <div class="placeholder"></div>
       <SearchBar :isFocused :title="title" />
       <div class="placeholder"></div>
     </div>
 
-    <div data-tauri-drag-region class="end">
+    <div class="end">
       <div class="placeholder"></div>
 
       <ActionBar v-if="showMenu" :isFocused />
-      <WindowControls v-if="titleBarStyle !== 'macos'" platform="macos" key="macos" />
-      <!-- <ControllerWindows v-if="titleBarStyle === 'windows'" :isFocused /> -->
+
+      <div v-if="titleBarStyle !== 'macos'" class="window-control"></div>
     </div>
   </div>
 </template>
@@ -123,6 +121,8 @@ div {
 
   border-bottom: 1px solid #424242;
   background-color: transparent;
+
+  app-region: drag;
 
   &.focused {
     background-color: var(--title-bar-bg-color, $title-bar-bg-color);
@@ -189,6 +189,18 @@ div {
         flex: 1;
         // border: #fff 1px solid;
 
+        pointer-events: none;
+      }
+
+      &.macos-control {
+        width: 76px;
+        flex: 0 0 76px;
+        pointer-events: none;
+      }
+
+      &.window-control {
+        width: 132px;
+        flex: 0 0 132px;
         pointer-events: none;
       }
 

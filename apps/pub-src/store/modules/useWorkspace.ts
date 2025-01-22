@@ -1,19 +1,24 @@
 import { defineStore } from 'pinia'
-import { appConfigDir, join } from '@tauri-apps/api/path'
-import { getCurrentWebview } from '@tauri-apps/api/webview'
-import { TauriEvent } from '@tauri-apps/api/event'
-import { stat, exists } from '@tauri-apps/plugin-fs'
+// import { appConfigDir, join } from '@tauri-apps/api/path'
+// import { getCurrentWebview } from '@tauri-apps/api/webview'
+// import { TauriEvent } from '@tauri-apps/api/event'
+// import { stat, exists } from '@tauri-apps/plugin-fs'
 import { shallowRef } from 'vue'
 import config, {
   createConfigLoader,
   type ConfigHandler
 } from '@apps/utils/config'
 import { createHash } from '@apps/utils/createHash'
-import { asyncArrayEvery } from '@apps/utils/asyncArrayEvery'
+// import { asyncArrayEvery } from '@apps/utils/asyncArrayEvery'
 
 const configDir = (async () => {
-  const dir = await appConfigDir()
-  return await join(dir, 'workspaces')
+  const dir = await window.ipcRenderer.invoke('path:get', 'userData')
+  return await window.ipcRenderer.invoke(
+    'path:join',
+    dir,
+    'config',
+    'workspace'
+  )
 })()
 
 const workspaceConfig = shallowRef<ConfigHandler<WorkspaceConfig> | null>()
@@ -38,7 +43,7 @@ export type WorkspaceConfig = {
   }
 }
 
-type OpenData = {
+export type OpenData = {
   paths: string[]
   type: 'files' | 'dir' | 'temp' | 'never'
 }
@@ -46,6 +51,18 @@ type OpenData = {
 const openData: OpenData = {
   paths: [],
   type: 'never'
+}
+
+export const setOpenData = (paths: string[], type: OpenData['type']) => {
+  openData.paths = paths
+  openData.type = type
+  const hash = createHash(paths.join('-'))
+  console.log(openData)
+  config.then(async (c) => {
+    c.update('workspace', {
+      path: await window.ipcRenderer.invoke('path:join', await configDir, hash)
+    })
+  })
 }
 
 const createDefaultWorkspaceConfig = (openData: OpenData): WorkspaceConfig => {
@@ -77,10 +94,22 @@ config.then(async (c) => {
 
   try {
     const isExist =
-      (await exists(lastConfig)) && (await stat(lastConfig)).isDirectory
+      (await window.ipcRenderer.invoke('fs:exists', lastConfig)) &&
+      (await window.ipcRenderer.invoke('fs:stat', lastConfig)).isDirectory
     if (isExist) {
       workspaceConfig.value =
         await createConfigLoader<WorkspaceConfig>(lastConfig)
+    } else {
+      console.log('not exist')
+      c.update('workspace.path', tempConfigPath)
+      workspaceConfig.value = await createConfigLoader<WorkspaceConfig>(
+        await window.ipcRenderer.invoke(
+          'path:join',
+          await configDir,
+          '__temp__'
+        )
+      )
+      // TODO: 提示 找不到配置文件
     }
     if (lastConfig === tempConfigPath) {
       workspaceConfig.value?.update(
@@ -92,7 +121,7 @@ config.then(async (c) => {
     console.log('not exist')
     c.update('workspace.path', tempConfigPath)
     workspaceConfig.value = await createConfigLoader<WorkspaceConfig>(
-      await join(await configDir, '__temp__')
+      await window.ipcRenderer.invoke('path:join', await configDir, '__temp__')
     )
     // TODO: 提示 找不到配置文件
   }
@@ -125,28 +154,6 @@ const closeWorkspace = async () => {
     })
   })
 }
-
-getCurrentWebview().onDragDropEvent(async (event) => {
-  if (event.event === TauriEvent.DRAG_DROP && event.payload.type === 'drop') {
-    const payload = event.payload
-    const isAllFile = await asyncArrayEvery(
-      payload.paths,
-      async (path) => (await stat(path)).isFile
-    )
-    if (payload.paths.length === 1 || isAllFile) {
-      const hash = createHash(payload.paths.join('-'))
-      config.then(async (c) => {
-        openData.paths = payload.paths
-        openData.type = isAllFile ? 'files' : 'dir'
-        c.update('workspace', {
-          path: await join(await configDir, hash)
-        })
-      })
-    } else {
-      // TODO: 提示 要求拖入 一个文件夹 或 多个文件
-    }
-  }
-})
 
 export const useWorkspace = defineStore('workspace', () => {
   return {

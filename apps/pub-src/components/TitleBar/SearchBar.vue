@@ -65,6 +65,8 @@ $search-bar-max-width: 600px;
 
   cursor: pointer;
 
+  app-region: no-drag;
+
   &:hover {
     background-color: #cecece1d;
   }

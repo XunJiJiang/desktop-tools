@@ -64,7 +64,7 @@ const switchPanel = (panel: 'left-panel' | 'layout-panel' | 'right-panel') => {
 </script>
 
 <template>
-  <div data-tauri-drag-region class="action-bar">
+  <div class="action-bar">
     <ul>
       <li>
         <a @click="switchPanel('left-panel')">
@@ -128,6 +128,8 @@ const switchPanel = (panel: 'left-panel' | 'layout-panel' | 'right-panel') => {
       width: 24px;
       height: 24px;
       border-radius: 5px;
+
+      app-region: no-drag;
 
       cursor: pointer;
 

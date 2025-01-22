@@ -72,7 +72,12 @@ export const createConfigLoader = async <T = any>(
   delay = 1000
 ) => {
   return await loadConfig<T>(
-    configPath ?? (await window.ipcRenderer.invoke('path:get', 'userData')),
+    configPath ??
+      (await window.ipcRenderer.invoke(
+        'path:join',
+        await window.ipcRenderer.invoke('path:get', 'userData'),
+        'config'
+      )),
     configId ?? 'config.json',
     delay,
     configPath === void 0
@@ -94,7 +99,7 @@ const loadConfig = async <T>(
   if (await window.ipcRenderer.invoke('fs:exists', appConfigPath)) {
     config = reactive(
       JSON.parse(
-        await window.ipcRenderer.invoke('fs:readFile', appFullConfigId, {
+        await window.ipcRenderer.invoke('fs:readfile', appFullConfigId, {
           encoding: 'utf-8'
         })
       )
@@ -104,7 +109,7 @@ const loadConfig = async <T>(
       recursive: true
     })
     window.ipcRenderer.invoke(
-      'fs:writeFile',
+      'fs:writefile',
       appFullConfigId,
       JSON.stringify(isGlobal ? defaultConfig : {}, null, 2),
       {
@@ -173,7 +178,7 @@ const loadConfig = async <T>(
     if (timeout) clearTimeout(timeout)
     timeout = setTimeout(() => {
       window.ipcRenderer.invoke(
-        'fs:writeFile',
+        'fs:writefile',
         appFullConfigId,
         JSON.stringify(c, null, 2)
       )
@@ -184,7 +189,7 @@ const loadConfig = async <T>(
   const handles = () => {
     if (timeout)
       window.ipcRenderer.invoke(
-        'fs:writeFile',
+        'fs:writefile',
         appFullConfigId,
         JSON.stringify(config, null, 2)
       )

@@ -1,6 +1,6 @@
 <script lang="ts">
 import i18n from '@apps/i18n'
-import { Menu, Submenu, MenuItem } from '@tauri-apps/api/menu'
+// import { Menu, Submenu, MenuItem } from '@tauri-apps/api/menu'
 import { onMounted, onUnmounted, useTemplateRef } from 'vue'
 import { getStringWidth } from '@apps/utils/getStringWidth'
 import { createAwaiter } from '../../utils/waitFnRun'
@@ -78,31 +78,31 @@ Promise.all([promise, config]).then(() => {
   const barWidth = menuBarRef.value?.clientWidth ?? 0
   init(barWidth)
 })
-Menu.new().then((m) => {
-  const submenus: Promise<Submenu | MenuItem>[] = []
-  for (const item of menu) {
-    if (titleBarStyle === 'macos') {
-      const submenu = Submenu.new({
-        id: item.label,
-        text: i18n.global.t(item.i18nKey),
-        enabled: true
-      })
-      submenus.push(submenu)
-    } else {
-      const submenu = MenuItem.new({
-        id: item.label,
-        text: i18n.global.t(item.i18nKey),
-        enabled: true
-      })
-      submenus.push(submenu)
-    }
-  }
-  Promise.all(submenus).then((submenus) => {
-    for (const submenu of submenus) {
-      m.append(submenu)
-    }
-  })
-})
+// Menu.new().then((m) => {
+//   const submenus: Promise<Submenu | MenuItem>[] = []
+//   for (const item of menu) {
+//     if (titleBarStyle === 'macos') {
+//       const submenu = Submenu.new({
+//         id: item.label,
+//         text: i18n.global.t(item.i18nKey),
+//         enabled: true
+//       })
+//       submenus.push(submenu)
+//     } else {
+//       const submenu = MenuItem.new({
+//         id: item.label,
+//         text: i18n.global.t(item.i18nKey),
+//         enabled: true
+//       })
+//       submenus.push(submenu)
+//     }
+//   }
+//   Promise.all(submenus).then((submenus) => {
+//     for (const submenu of submenus) {
+//       m.append(submenu)
+//     }
+//   })
+// })
 onMounted(() => {
   resolve()
 })
@@ -136,6 +136,8 @@ onUnmounted(() => {
     justify-content: flex-start;
 
     font-size: 13px;
+
+    app-region: no-drag;
   }
 }
 </style>

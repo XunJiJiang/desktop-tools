@@ -1,6 +1,8 @@
 <script lang="ts">
 import ba from './utils/text-bill-analysis'
 import i18n from '@/apps/pub-src/i18n'
+import config from '@/apps/pub-src/utils/config'
+import { shallowRef, watch } from 'vue'
 
 async function textBillAnalysis() {
   const input = document.createElement('input')
@@ -39,12 +41,25 @@ const changeLanguage = (event: Event) => {
 
 <script setup lang="ts">
 import TitleBar from '@comp/TitleBar/TitleBar.vue'
+import { useFileDrop } from '@apps/hooks/useFileDrop'
+const fileDrop = useFileDrop('container', (e) => {
+  console.log(e)
+})
+const alphaRef = shallowRef(255)
+config.then((c) => {
+  alphaRef.value = (c.value['bg-transparency'] || 255)
+})
+watch(alphaRef, (v) => {
+  config.then((c) => {
+    c.update('bg-transparency', Number(v))
+  })
+})
 </script>
 
 <template>
   <div>
     <TitleBar :title="$t('title.search')" :showMenu="true" />
-    <main class="container">
+    <main class="container" ref="container">
       <div>
         <form id="form" @submit="submitFile">
           <button type="submit">选择账单</button>
