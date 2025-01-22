@@ -78,6 +78,7 @@ watch(alphaRef, (v) => {
             {{ key }}
           </option>
         </select>
+        <!-- <input type="range" min="0" max="255" step="1" v-model="alphaRef" /> -->
       </div>
     </main>
   </div>
