@@ -1,3 +1,1 @@
-export interface Settings {
-  language: 'ja' | 'zh' | 'tw' | 'en'
-}
+export type Settings = import('../../../types/settings').Settings

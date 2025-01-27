@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { reactive, watch } from 'vue'
-import defaultConfig from '@apps/assets/config/default.json'
+import ipc from '@apps/utils/ipc'
 
 type ConfigValue = string | number | boolean | object | null
 
@@ -60,6 +60,12 @@ const getValue = (obj: any, path: string) => {
   return current
 }
 
+type Opt = {
+  /** 仅当由当前视图触发的配置变化触发 */
+  onConfigChange?: (config: any) => void
+  isGlobal?: boolean
+}
+
 /**
  * 创建配置加载器
  * @param configPath 配置文件路径
@@ -67,48 +73,39 @@ const getValue = (obj: any, path: string) => {
  * @returns
  */
 export const createConfigLoader = async <T = any>(
-  configPath?: string,
+  configPath: string,
   configId?: string,
-  delay = 1000
+  delay = 1000,
+  opt?: Opt
 ) => {
-  return await loadConfig<T>(
-    configPath ??
-      (await window.ipcRenderer.invoke(
-        'path:join',
-        await window.ipcRenderer.invoke('path:get', 'userData'),
-        'config'
-      )),
-    configId ?? 'config.json',
-    delay,
-    configPath === void 0
-  )
+  return await loadConfig<T>(configPath, configId ?? 'config.json', delay, opt)
 }
 
 const loadConfig = async <T>(
   appConfigPath: string,
   configId: string,
   delay: number,
-  isGlobal: boolean = false
+  opt: Opt = {}
 ): Promise<ConfigHandler<T>> => {
+  const { onConfigChange = () => {}, isGlobal = false } = opt
+  /** 当前视图是否触发config变化, 仅当为true时触发onConfigChange和修改配置文件 */
+  let isCurrentViewChange = false
   let config
-  const appFullConfigId = await window.ipcRenderer.invoke(
-    'path:join',
-    appConfigPath,
-    configId
-  )
-  if (await window.ipcRenderer.invoke('fs:exists', appConfigPath)) {
+  const appFullConfigId = await ipc.invoke('path:join', appConfigPath, configId)
+  if (await ipc.invoke('fs:exists', appFullConfigId)) {
     config = reactive(
       JSON.parse(
-        await window.ipcRenderer.invoke('fs:readfile', appFullConfigId, {
+        await ipc.invoke('fs:readfile', appFullConfigId, {
           encoding: 'utf-8'
         })
       )
     )
   } else {
-    await window.ipcRenderer.invoke('fs:mkdir', appConfigPath, {
+    const defaultConfig = JSON.parse(await ipc.invoke('config:default'))
+    await ipc.invoke('fs:mkdir', appConfigPath, {
       recursive: true
     })
-    window.ipcRenderer.invoke(
+    ipc.invoke(
       'fs:writefile',
       appFullConfigId,
       JSON.stringify(isGlobal ? defaultConfig : {}, null, 2),
@@ -116,6 +113,8 @@ const loadConfig = async <T>(
         encoding: 'utf-8'
       }
     )
+    onConfigChange(config)
+    isCurrentViewChange = false
     config = reactive(isGlobal ? defaultConfig : {})
   }
 
@@ -127,7 +126,7 @@ const loadConfig = async <T>(
   let oldConfig = JSON.stringify(config)
 
   const distribute = (v: typeof config) => {
-    const ov = JSON.parse(oldConfig)
+    const ov = oldConfig ? JSON.parse(oldConfig) : {}
     oldConfig = JSON.stringify(v)
     /** 变化了的路径和对应的新值 */
     const map = new Map<string, any>()
@@ -166,6 +165,7 @@ const loadConfig = async <T>(
   watch(
     config,
     (v) => {
+      if (!v) return
       result.value = JSON.parse(JSON.stringify(v))
       distribute(v)
     },
@@ -175,27 +175,49 @@ const loadConfig = async <T>(
   )
 
   const updateConfigFile = (c: typeof config) => {
+    if (!isCurrentViewChange) {
+      return
+    }
     if (timeout) clearTimeout(timeout)
     timeout = setTimeout(() => {
-      window.ipcRenderer.invoke(
-        'fs:writefile',
-        appFullConfigId,
-        JSON.stringify(c, null, 2)
-      )
+      ipc.invoke('fs:writefile', appFullConfigId, JSON.stringify(c, null, 2))
+      onConfigChange(config)
+      isCurrentViewChange = false
       timeout = null
     }, delay)
   }
 
-  const handles = () => {
-    if (timeout)
-      window.ipcRenderer.invoke(
+  const handles = async () => {
+    if (!isCurrentViewChange) {
+      return
+    }
+    const value = {
+      config: JSON.parse(JSON.stringify(config))
+    }
+    if (timeout) {
+      ipc.invoke(
         'fs:writefile',
         appFullConfigId,
-        JSON.stringify(config, null, 2)
+        JSON.stringify(value.config, null, 2)
       )
+      onConfigChange(value.config)
+      isCurrentViewChange = false
+    }
   }
 
-  window.ipcRenderer.on('app:close', handles)
+  const configUpdate = (e: Event | null, c: typeof config) => {
+    if (e && !isGlobal) {
+      return
+    }
+
+    for (const key in c as T) {
+      const _val = (c as T)[key]
+      config[key] = _val ? JSON.parse(JSON.stringify((c as T)[key])) : _val
+    }
+  }
+
+  ipc.on('window:close', handles)
+  ipc.on('config:global:update', configUpdate)
 
   const result = {
     value,
@@ -205,10 +227,9 @@ const loadConfig = async <T>(
         ? Record<string, ConfigValue>
         : ConfigValue
     ) {
+      isCurrentViewChange = true
       if (path === '[update:all]') {
-        for (const key in value as T) {
-          config[key] = JSON.parse(JSON.stringify((value as T)[key]))
-        }
+        configUpdate(null, value as T)
         return
       }
       const pathArray = resolvePath(path)
@@ -240,7 +261,8 @@ const loadConfig = async <T>(
     },
     close() {
       handles()
-      window.ipcRenderer.off('app:close', handles)
+      ipc.off('window:close', handles)
+      ipc.off('config:global:update', configUpdate)
     }
   } as ConfigHandler<T>
 
@@ -250,7 +272,7 @@ const loadConfig = async <T>(
 }
 
 export type GlobalConfig = {
-  language: null | 'zh' | 'en' | 'ja' | 'tw'
+  language: null | string
   theme: `${string}:${string}`
   'bg-transparency': false | number
   'title-bar': {
@@ -267,6 +289,28 @@ export type GlobalConfig = {
  * @ on 监听指定配置变化
  * @ remove 移除监听
  */
-const config = createConfigLoader<GlobalConfig>()
+const config = (async () =>
+  await createConfigLoader<GlobalConfig>(
+    await ipc.invoke(
+      'path:join',
+      await ipc.invoke('path:get', 'userData'),
+      'config'
+    ),
+    'config.json',
+    1000,
+    {
+      isGlobal: true,
+      onConfigChange: (config) => {
+        ipc.send(
+          'config:global:update',
+          config ? JSON.parse(JSON.stringify(config)) : {}
+        )
+      },
+    }
+  ))()
+
+config.then((c) => {
+  ipc.send('config:global:update', c.value)
+})
 
 export default config

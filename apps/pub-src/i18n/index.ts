@@ -1,13 +1,9 @@
 import { createI18n } from 'vue-i18n'
-import type { Settings } from '@apps/types/settings'
 import config from '@apps/utils/config'
-import en from './languages/en.json'
-import ja from './languages/ja.json'
-import zh from './languages/zh.json'
-import tw from './languages/tw.json'
-import { watch } from 'vue'
+import { watch, nextTick } from 'vue'
+import { invoke } from '@apps/utils/ipc'
 
-const getBrowserLocale = (): Settings['language'] => {
+const getBrowserLocale = (): string => {
   const navigatorLocale = navigator.language || navigator.languages[0]
   if (!navigatorLocale) {
     return 'en'
@@ -25,33 +21,34 @@ const getBrowserLocale = (): Settings['language'] => {
   }
 }
 
-const messages = {
-  en,
-  ja,
-  zh,
-  tw
+const loadLocaleMessages = async (locale: string) => {
+  const messages = await invoke('i18n:load', locale)
+  i18n.global.setLocaleMessage(locale, messages)
+  await nextTick()
 }
 
 const i18n = createI18n({
+  legacy: false,
   locale: getBrowserLocale(),
-  fallbackLocale: 'en',
-  messages
+  fallbackLocale: 'en'
 })
 
+loadLocaleMessages(i18n.global.locale.value)
+
+loadLocaleMessages('en')
+
 config.then((c) => {
-  if (c.value.language) i18n.global.locale = c.value.language
-  else c.update('language', i18n.global.locale)
-  c.on('language', (language) => {
+  if (c.value.language) i18n.global.locale.value = c.value.language
+  else c.update('language', i18n.global.locale.value)
+  c.on('language', async (language) => {
     if (!language) return
-    i18n.global.locale = language
+    await loadLocaleMessages(language)
+    i18n.global.locale.value = language
   })
 })
 
-watch(
-  () => i18n.global.locale,
-  (locale) => {
-    config.then((c) => c.update('language', locale))
-  }
-)
+watch(i18n.global.locale, (locale) => {
+  config.then((c) => c.update('language', locale))
+})
 
 export default i18n

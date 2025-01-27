@@ -1,0 +1,117 @@
+{
+  "title": {
+    "search": {
+      "value": "搜索"
+    },
+    "menu": {
+      "appMenu": {
+        "value": "桌面工具",
+        "items": {
+          "about": "关于",
+          "update": "检查更新",
+          "preferences": {
+            "value": "首选项",
+            "items": {
+              "settings": "设置",
+              "keyboards": "键盘快捷方式",
+              "themes": "主题",
+              "languages": "语言"
+            }
+          },
+          "services": "服务",
+          "hide": "隐藏",
+          "hideOthers": "隐藏其他",
+          "unhide": "全部显示",
+          "quit": "退出"
+        }
+      },
+      "file": {
+        "value": "文件",
+        "items": {
+          "newWindow": "新建窗口",
+          "newWindowByConfig": "使用配置新建窗口",
+          "open": "打开",
+          "openFolder": "打开文件夹",
+          "openWorkspaceByConfig": "使用配置打开工作区",
+          "openRecentWorkspace": {
+            "value": "最近打开的工作区",
+            "items": {
+              "more": "更多...",
+              "clear": "清除"
+            }
+          },
+          "save": "保存",
+          "saveAs": "另存为",
+          "saveAll": "全部保存",
+          "saveWorkspaceAs": "工作区另存为",
+          "share": {
+            "value": "分享",
+            "items": {}
+          },
+          "autoSave": "自动保存",
+          "closeWorkspace": "关闭工作区",
+          "closeWindow": "关闭窗口"
+        }
+      },
+      "edit": {
+        "value": "编辑",
+        "items": {
+          "undo": "撤销",
+          "redo": "重做",
+          "cut": "剪切",
+          "copy": "复制",
+          "paste": "粘贴",
+          "find": "查找",
+          "replace": "替换",
+          "findInFiles": "在文件中查找",
+          "replaceInFiles": "在文件中替换",
+          "autoFill": "自动填充",
+          "dictation": "开始听写",
+          "emoticonsSymbols": "表情符号"
+        }
+      },
+      "selection": {
+        "value": "选择",
+        "items": {
+          "selectAll": "全选",
+          "copyOneLineUp": "向上复制一行",
+          "copyOneLineDown": "向下复制一行",
+          "moveOneLineUp": "向上移动一行",
+          "moveOneLineDown": "向下移动一行",
+          "addCursorUp": "在上方添加光标",
+          "addCursorDown": "在下方添加光标"
+        }
+      },
+      "view": {
+        "value": "查看",
+        "items": {
+          "commandPalette": "命令面板",
+          "openView": "打开视图",
+          "appearance": {
+            "value": "外观",
+            "items": {
+              "primarySidebar": "主侧边栏",
+              "auxiliarySidebar": "辅助侧边栏",
+              "statusBar": "状态栏",
+              "panel": "面板",
+              "thumbnail": "缩略图"
+            }
+          },
+          "autoLineBreak": "自动换行"
+        }
+      },
+      "go": {
+        "value": "转到"
+      },
+      "terminal": {
+        "value": "终端"
+      },
+      "window": {
+        "value": "窗口"
+      },
+      "help": {
+        "value": "帮助"
+      }
+    }
+  }
+}

@@ -8,13 +8,19 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 const __dirname = join(dirname(fileURLToPath(import.meta.url)))
 const joinTo = (...paths: string[]) => resolve(__dirname, ...paths)
 
-// https://vitejs.dev/config/
 export default defineConfig(async () => ({
   plugins: [
     vue(),
     vueDevTools(),
     electron({
       main: {
+        vite: {
+          resolve: {
+            alias: {
+              '@ele': joinTo('electron/main')
+            }
+          }
+        },
         entry: joinTo('electron/main/main.ts')
       },
       preload: {

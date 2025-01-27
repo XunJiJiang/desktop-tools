@@ -3,6 +3,7 @@ import ba from './utils/text-bill-analysis'
 import i18n from '@/apps/pub-src/i18n'
 import config from '@/apps/pub-src/utils/config'
 import { shallowRef, watch } from 'vue'
+import ipc from '@apps/utils/ipc'
 
 async function textBillAnalysis() {
   const input = document.createElement('input')
@@ -24,7 +25,7 @@ const submitFile = (e: Event) => {
   textBillAnalysis()
 }
 const createWindow = async (label: string) => {
-  const res = await window.ipcRenderer.invoke('window:new', label)
+  const res = await ipc.invoke('window:new', label)
   console.log(res)
 }
 const languages = [
@@ -34,7 +35,7 @@ const languages = [
   ['ja', '日本語']
 ] as const
 const changeLanguage = (event: Event) => {
-  i18n.global.locale = (event.target as HTMLSelectElement)
+  i18n.global.locale.value = (event.target as HTMLSelectElement)
     .value as (typeof languages)[number][0]
 }
 </script>
@@ -42,12 +43,17 @@ const changeLanguage = (event: Event) => {
 <script setup lang="ts">
 import TitleBar from '@comp/TitleBar/TitleBar.vue'
 import { useFileDrop } from '@apps/hooks/useFileDrop'
-const fileDrop = useFileDrop('container', (e) => {
+import { useI18n } from 'vue-i18n'
+const { locale } = useI18n({
+  useScope: 'global'
+})
+// const fileDrop =
+useFileDrop('container', (e) => {
   console.log(e)
 })
 const alphaRef = shallowRef(255)
 config.then((c) => {
-  alphaRef.value = (c.value['bg-transparency'] || 255)
+  alphaRef.value = c.value['bg-transparency'] || 255
 })
 watch(alphaRef, (v) => {
   config.then((c) => {
@@ -58,7 +64,7 @@ watch(alphaRef, (v) => {
 
 <template>
   <div>
-    <TitleBar :title="$t('title.search')" :showMenu="true" />
+    <TitleBar :title="$t('title.search.value')" :showMenu="true" />
     <main class="container" ref="container">
       <div>
         <form id="form" @submit="submitFile">
@@ -73,12 +79,12 @@ watch(alphaRef, (v) => {
             v-for="[lang, key] in languages"
             :key="key"
             :value="lang"
-            :selected="lang === i18n.global.locale"
+            :selected="lang === locale"
           >
             {{ key }}
           </option>
         </select>
-        <!-- <input type="range" min="0" max="255" step="1" v-model="alphaRef" /> -->
+        <input type="range" min="0" max="255" step="1" v-model="alphaRef" />
       </div>
     </main>
   </div>
@@ -112,7 +118,7 @@ select {
   padding: 11px;
   border-radius: 8px;
   border: 0;
-  background-color: #1d1d1d;
+  background-color: #0f0f0f98;
   color: #fff;
   font-size: 16px;
   border: 1px solid #6736ec00;

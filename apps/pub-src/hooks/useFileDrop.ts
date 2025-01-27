@@ -1,6 +1,6 @@
 import { onMounted, useTemplateRef } from 'vue'
-import config from '@apps/utils/config'
 import { setOpenData, type OpenData } from '@apps/store/modules/useWorkspace'
+import ipc from '@apps/utils/ipc'
 
 class DropNode {
   readonly [Symbol.toStringTag]: 'DropNode' | 'FileNode' | 'DirectoryNode' =
@@ -31,7 +31,7 @@ class FileNode extends DropNode {
   readonly [Symbol.toStringTag] = 'FileNode'
   async content(encoding = 'utf-8') {
     const path = this.path
-    const res = await window.ipcRenderer.invoke('fs:readfile', path, {
+    const res = await ipc.invoke('fs:readfile', path, {
       encoding: encoding
     })
     return res
@@ -42,7 +42,7 @@ class DirectoryNode extends DropNode {
   readonly [Symbol.toStringTag] = 'DirectoryNode'
   get children() {
     const path = this.path
-    const res = window.ipcRenderer.invoke('fs:readdir', path, {
+    const res = ipc.invoke('fs:readdir', path, {
       withFileTypes: true
     })
     return res
@@ -60,12 +60,14 @@ export const useFileDrop = (
       if (nodes instanceof DirectoryNode) {
         return {
           paths: [nodes.path],
-          type: 'dir'
+          type: 'dir',
+          workspaceConfigPath: ''
         }
       } else {
         return {
           paths: nodes.map((node) => node.path),
-          type: 'files'
+          type: 'files',
+          workspaceConfigPath: ''
         }
       }
     })(nodes)
@@ -83,8 +85,8 @@ export const useFileDrop = (
       const nodes = []
       for (let i = 0; i < len; i++) {
         const file = files[i]
-        const path = window.ipcRenderer.getPathForFile(file)
-        if ((await window.ipcRenderer.invoke('fs:stat', path)).isDirectory) {
+        const path = ipc.getPathForFile(file)
+        if ((await ipc.invoke('fs:stat', path)).isDirectory) {
           if (i === 0) {
             _ondrop(new DirectoryNode(file.name, path))
             if (len > 1) {

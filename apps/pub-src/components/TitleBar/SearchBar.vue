@@ -12,6 +12,10 @@ const { isFocused } = defineProps({
   title: {
     type: String,
     required: true
+  },
+  titleBarStyle: {
+    type: String,
+    required: true
   }
 })
 
@@ -32,7 +36,8 @@ const click = () => {
     @click="click"
     :class="{
       'search-bar': true,
-      focused: isFocused
+      focused: isFocused,
+      macos: titleBarStyle === 'macos'
     }"
   >
     <IconFont name="search" :color :size="13" />
@@ -43,6 +48,10 @@ const click = () => {
 
 <style scoped lang="scss">
 $search-bar-max-width: 600px;
+
+.search-bar.macos {
+  flex: 0 0 max(min($search-bar-max-width, calc(100% - 10px)), 222px);
+}
 
 .search-bar {
   justify-content: center;
@@ -66,6 +75,10 @@ $search-bar-max-width: 600px;
   cursor: pointer;
 
   app-region: no-drag;
+
+  @media screen and (max-width: 520px) {
+    flex: 0 0 calc(100% - 10px);
+  }
 
   &:hover {
     background-color: #cecece1d;

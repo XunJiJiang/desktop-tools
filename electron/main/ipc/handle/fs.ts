@@ -1,24 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { resourcesPath } from '@ele/utils/resourcesPath'
 import { ipcMain } from 'electron'
 import fs from 'node:fs'
 import { join } from 'node:path'
-
-const resourcesPath = () =>
-  process.env['VITE_DEV_SERVER_URL']
-    ? process.env.APP_ROOT
-    : process.resourcesPath
-
-// const exposeList = [
-//   'exists',
-//   'stat',
-//   'readdir',
-//   'readFile',
-//   'writeFile',
-//   'mkdir',
-//   'rmdir',
-//   'unlink',
-//   'rename'
-// ] as const
 
 const useFs = () => {
   ipcMain.handle('fs:exists', async (_, path: fs.PathLike) => {
@@ -52,6 +36,7 @@ const useFs = () => {
     return new Promise((resolve, reject) => {
       fs.readFile(path, opts, (err, data) => {
         if (err) {
+          console.error(err)
           reject(err)
         } else {
           resolve(data)
@@ -95,6 +80,17 @@ const useFs = () => {
       })
     })
   })
+  ipcMain.handle('fs:readdir', async (_, path: fs.PathLike, opts?: any) => {
+    return new Promise<string[]>((resolve, reject) => {
+      fs.readdir(path, opts, (err, files) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(files)
+        }
+      })
+    })
+  })
   ipcMain.handle('fs:unlink', async (_, path: fs.PathLike) => {
     return new Promise<void>((resolve, reject) => {
       fs.unlink(path, (err) => {
@@ -121,7 +117,7 @@ const useFs = () => {
     }
   )
   ipcMain.handle('fs:resources', async (_, paths: string[]) => {
-    const p = join(resourcesPath(), 'resources', ...paths)
+    const p = join(resourcesPath(), ...paths)
     return new Promise((resolve, reject) => {
       fs.readFile(p, { encoding: 'utf-8' }, (err, data) => {
         if (err) {

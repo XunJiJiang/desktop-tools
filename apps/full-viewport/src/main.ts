@@ -8,6 +8,7 @@ import { initThemes, reloadDefaultThemes } from '@apps/theme'
 import { pinia } from '@apps/store'
 // import router from './router'
 
+// TODO: 此处仅开发环境下使用, 用于每次刷新页面时重新转存默认主题
 reloadDefaultThemes()
 
 const app = createApp(App)

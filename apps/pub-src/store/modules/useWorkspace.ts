@@ -1,24 +1,16 @@
 import { defineStore } from 'pinia'
-// import { appConfigDir, join } from '@tauri-apps/api/path'
-// import { getCurrentWebview } from '@tauri-apps/api/webview'
-// import { TauriEvent } from '@tauri-apps/api/event'
-// import { stat, exists } from '@tauri-apps/plugin-fs'
 import { shallowRef } from 'vue'
 import config, {
   createConfigLoader,
   type ConfigHandler
 } from '@apps/utils/config'
 import { createHash } from '@apps/utils/createHash'
+import ipc from '@apps/utils/ipc'
 // import { asyncArrayEvery } from '@apps/utils/asyncArrayEvery'
 
 const configDir = (async () => {
-  const dir = await window.ipcRenderer.invoke('path:get', 'userData')
-  return await window.ipcRenderer.invoke(
-    'path:join',
-    dir,
-    'config',
-    'workspace'
-  )
+  const dir = await ipc.invoke('path:get', 'userData')
+  return await ipc.invoke('path:join', dir, 'config', 'workspace')
 })()
 
 const workspaceConfig = shallowRef<ConfigHandler<WorkspaceConfig> | null>()
@@ -46,23 +38,38 @@ export type WorkspaceConfig = {
 export type OpenData = {
   paths: string[]
   type: 'files' | 'dir' | 'temp' | 'never'
+  workspaceConfigPath: string
 }
 
 const openData: OpenData = {
   paths: [],
-  type: 'never'
+  type: 'never',
+  workspaceConfigPath: '[workspace:temp]'
 }
 
-export const setOpenData = (paths: string[], type: OpenData['type']) => {
+export const setOpenData = async (paths: string[], type: OpenData['type']) => {
   openData.paths = paths
   openData.type = type
   const hash = createHash(paths.join('-'))
+  const workspaceConfigPath = await ipc.invoke(
+    'path:join',
+    await configDir,
+    hash
+  )
+  openData.workspaceConfigPath = workspaceConfigPath
+  ipc.send('workspace:change', openData.workspaceConfigPath)
   console.log(openData)
-  config.then(async (c) => {
-    c.update('workspace', {
-      path: await window.ipcRenderer.invoke('path:join', await configDir, hash)
-    })
-  })
+  if (workspaceConfig.value) {
+    workspaceConfig.value.close()
+    workspaceConfig.value =
+      await createConfigLoader<WorkspaceConfig>(workspaceConfigPath)
+    if (!workspaceConfig.value?.value?.type) {
+      workspaceConfig.value?.update(
+        '[update:all]',
+        createDefaultWorkspaceConfig(openData)
+      )
+    }
+  }
 }
 
 const createDefaultWorkspaceConfig = (openData: OpenData): WorkspaceConfig => {
@@ -90,69 +97,61 @@ const createDefaultWorkspaceConfig = (openData: OpenData): WorkspaceConfig => {
 const tempConfigPath = '[workspace:temp]'
 
 config.then(async (c) => {
+  // #region 加载上次的工作区 start
+
   const lastConfig = c.value.workspace?.path ?? ''
 
   try {
     const isExist =
-      (await window.ipcRenderer.invoke('fs:exists', lastConfig)) &&
-      (await window.ipcRenderer.invoke('fs:stat', lastConfig)).isDirectory
+      (await ipc.invoke('fs:exists', lastConfig)) &&
+      (await ipc.invoke('fs:stat', lastConfig)).isDirectory
     if (isExist) {
       workspaceConfig.value =
         await createConfigLoader<WorkspaceConfig>(lastConfig)
+      openData.workspaceConfigPath = lastConfig
     } else {
-      console.log('not exist')
-      c.update('workspace.path', tempConfigPath)
+      console.log('isExist: not exist')
       workspaceConfig.value = await createConfigLoader<WorkspaceConfig>(
-        await window.ipcRenderer.invoke(
-          'path:join',
-          await configDir,
-          '__temp__'
-        )
+        await ipc.invoke('path:join', await configDir, '__temp__'),
+        'temp-' + (await ipc.invoke('window:webContent:id')) + '.json'
       )
+      openData.workspaceConfigPath = tempConfigPath
       // TODO: 提示 找不到配置文件
     }
     if (lastConfig === tempConfigPath) {
+      openData.workspaceConfigPath = tempConfigPath
       workspaceConfig.value?.update(
         '[update:all]',
         createDefaultWorkspaceConfig(openData)
       )
     }
   } catch {
-    console.log('not exist')
-    c.update('workspace.path', tempConfigPath)
+    console.log('catch: not exist')
+    openData.workspaceConfigPath = tempConfigPath
     workspaceConfig.value = await createConfigLoader<WorkspaceConfig>(
-      await window.ipcRenderer.invoke('path:join', await configDir, '__temp__')
+      await ipc.invoke('path:join', await configDir, '__temp__'),
+      'temp-' + (await ipc.invoke('window:webContent:id')) + '.json'
     )
     // TODO: 提示 找不到配置文件
+  } finally {
+    // 在第一个窗口启动时, 读取上次的最后一个窗口的工作区配置
+    // 之后的窗口都使用临时配置, 除非打开了一个新的工作区
+    c.update('workspace.path', tempConfigPath)
+
+    ipc.send('workspace:change', openData.workspaceConfigPath)
   }
 
-  c.on('workspace', async (globalWorkspaceConfig) => {
-    if (openData.type === 'never') {
-      return
-    }
-    workspaceConfig.value?.close()
-    if (globalWorkspaceConfig.path) {
-      workspaceConfig.value = await createConfigLoader<WorkspaceConfig>(
-        globalWorkspaceConfig.path
-      )
-      if (!workspaceConfig.value?.value?.type) {
-        workspaceConfig.value?.update(
-          '[update:all]',
-          createDefaultWorkspaceConfig(openData)
-        )
-      }
-    } else if (globalWorkspaceConfig.path === null) {
-      workspaceConfig.value = null
-    }
-  })
+  // #endregion 加载上次的工作区 end
 })
 
 const closeWorkspace = async () => {
-  config.then((c) => {
-    c.update('workspace', {
-      path: null
-    })
-  })
+  if (workspaceConfig.value) {
+    workspaceConfig.value.close()
+    workspaceConfig.value = null
+  }
+  openData.paths = []
+  openData.type = 'never'
+  openData.workspaceConfigPath = tempConfigPath
 }
 
 export const useWorkspace = defineStore('workspace', () => {

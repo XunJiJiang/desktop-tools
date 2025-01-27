@@ -2,7 +2,9 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 // import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
+import fs from 'node:fs'
 import useIpc from './ipc'
+import { updateConfigFile } from './ipc/handle/config'
 
 // const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -27,9 +29,22 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   ? path.join(process.env.APP_ROOT, 'public')
   : RENDERER_DIST
 
-const wins: Map<BrowserWindow, Set<BrowserWindow>> = new Map()
+const wins: Map<Electron.WebContents, Set<Electron.WebContents>> = new Map()
 
-function createWindow(label: string) {
+const fullWebContentsWorkspaces: Map<Electron.WebContents, string> = new Map()
+
+app.setName('Desktop Tools')
+
+function createWindow(
+  label: string,
+  {
+    isMainViewportOnly = false,
+    parentWebContents
+  }: {
+    isMainViewportOnly?: boolean
+    parentWebContents?: Electron.WebContents
+  } = {}
+) {
   const win = new BrowserWindow({
     titleBarStyle: 'hidden',
     titleBarOverlay: {
@@ -47,23 +62,46 @@ function createWindow(label: string) {
     }
   })
 
-  wins.set(win, new Set())
-
-  // Test active push message to Renderer-process.
-  win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('main-process-message', new Date().toLocaleString())
+  win.webContents.openDevTools({
+    mode: 'detach',
+    activate: false
   })
+
+  if (!isMainViewportOnly) {
+    wins.set(win.webContents, new Set())
+    fullWebContentsWorkspaces.set(win.webContents, '')
+  } else {
+    if (parentWebContents) {
+      const childrenWins = wins.get(parentWebContents)
+      childrenWins?.add(win.webContents)
+    }
+  }
 
   win.on('close', () => {
-    win.webContents.send('window:close')
-  })
-
-  win.on('closed', () => {
-    const childrenWins = wins.get(win)
-    childrenWins?.forEach((childWin) => {
-      childWin.close()
+    const isLastFullViewport = !isMainViewportOnly && wins.size === 1
+    win.webContents.send('window:close', {
+      isLastFullViewport
     })
-    wins.delete(win)
+    if (isLastFullViewport) {
+      const run = updateConfigFile((c) => {
+        if (c && c.workspace) {
+          c.workspace.path =
+            fullWebContentsWorkspaces.get(win.webContents) || ''
+        }
+        return c
+      })
+      win.on('closed', () => {
+        run()
+      })
+    }
+    if (!isMainViewportOnly) {
+      const childrenWins = wins.get(win.webContents)
+      childrenWins?.forEach((childWin) => {
+        childWin.close()
+      })
+      wins.delete(win.webContents)
+      fullWebContentsWorkspaces.delete(win.webContents)
+    }
   })
 
   win.on('focus', () => {
@@ -79,7 +117,7 @@ function createWindow(label: string) {
     win.loadURL(url.toString())
   } else {
     // win.loadFile('dist/index.html')
-    win.loadFile(path.join(RENDERER_DIST, label, 'index.html'))
+    win.loadFile(path.join(RENDERER_DIST, 'apps', label, 'index.html'))
   }
 
   return win
@@ -92,6 +130,15 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
     wins.clear()
+  } else {
+    // 清理 workspace/__temp__ 目录
+    const tempDir = path.join(
+      app.getPath('userData'),
+      'config',
+      'workspace',
+      '__temp__'
+    )
+    fs.rmdir(tempDir, { recursive: true }, () => {})
   }
 })
 
@@ -104,11 +151,17 @@ app.on('activate', () => {
 
 app
   .whenReady()
-  .then(() => createWindow('full-viewport'))
   .then(useIpc)
+  .then(() => createWindow('full-viewport'))
   .then(() => {
-    ipcMain.handle('window:new', async (_event, label: string) => {
-      const win = createWindow(label)
+    ipcMain.handle('window:new', async (event, label: string) => {
+      const eventLabel = event.sender.getURL()
+      const isMainViewportOnly =
+        eventLabel.includes('full-viewport') && label === 'main-viewport-only'
+      const win = createWindow(label, {
+        isMainViewportOnly,
+        parentWebContents: isMainViewportOnly ? event.sender : undefined
+      })
 
       return {
         status: 'ok',
@@ -117,5 +170,9 @@ app
           id: win.id
         }
       }
+    })
+
+    ipcMain.on('workspace:change', (e, path: string) => {
+      fullWebContentsWorkspaces.set(e.sender, path)
     })
   })

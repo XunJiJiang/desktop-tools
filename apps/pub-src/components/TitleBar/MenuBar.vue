@@ -1,49 +1,54 @@
 <script lang="ts">
 import i18n from '@apps/i18n'
-// import { Menu, Submenu, MenuItem } from '@tauri-apps/api/menu'
 import { onMounted, onUnmounted, useTemplateRef } from 'vue'
 import { getStringWidth } from '@apps/utils/getStringWidth'
 import { createAwaiter } from '../../utils/waitFnRun'
 const menu = [
   {
     label: 'file',
-    i18nKey: 'title.menu.file',
+    i18nKey: 'title.menu.file.value',
     globalKey: 'F',
     group: []
   },
   {
     label: 'edit',
-    i18nKey: 'title.menu.edit',
+    i18nKey: 'title.menu.edit.value',
     globalKey: 'E',
     group: []
   },
   {
     label: 'selection',
-    i18nKey: 'title.menu.selection',
+    i18nKey: 'title.menu.selection.value',
     globalKey: 'S',
     group: []
   },
   {
     label: 'view',
-    i18nKey: 'title.menu.view',
+    i18nKey: 'title.menu.view.value',
     globalKey: 'V',
     group: []
   },
   {
     label: 'go',
-    i18nKey: 'title.menu.go',
+    i18nKey: 'title.menu.go.value',
     globalKey: 'G',
     group: []
   },
   {
     label: 'terminal',
-    i18nKey: 'title.menu.terminal',
+    i18nKey: 'title.menu.terminal.value',
     globalKey: 'T',
     group: []
   },
   {
+    label: 'window',
+    i18nKey: 'title.menu.window.value',
+    globalKey: 'w',
+    group: []
+  },
+  {
     label: 'help',
-    i18nKey: 'title.menu.help',
+    i18nKey: 'title.menu.help.value',
     globalKey: 'H',
     group: []
   }

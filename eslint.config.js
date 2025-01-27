@@ -1,13 +1,16 @@
 import { dirname, resolve } from 'node:path'
 import pluginVue from 'eslint-plugin-vue'
-import vueTsEslintConfig from '@vue/eslint-config-typescript'
 import pluginVitest from '@vitest/eslint-plugin'
 import skipFormatting from '@vue/eslint-config-prettier/skip-formatting'
+import {
+  defineConfigWithVueTs,
+  vueTsConfigs
+} from '@vue/eslint-config-typescript'
 
 const __dirname = dirname(new URL(import.meta.url).pathname)
 const joinTo = (...paths) => resolve(__dirname, ...paths)
 
-export default [
+export default defineConfigWithVueTs(
   {
     name: 'app/files-to-lint',
     files: ['**/*.{ts,mts,tsx,vue,js,jsx}']
@@ -30,7 +33,8 @@ export default [
                 '@fu': joinTo('apps/full-viewport/src'),
                 '@mv': joinTo('apps/main-viewport-only/src'),
                 '@apps': joinTo('apps/pub-src'),
-                '@comp': joinTo('apps/pub-src/components')
+                '@comp': joinTo('apps/pub-src/components'),
+                '@ele': joinTo('electron/main')
               }
             }
           }
@@ -39,12 +43,12 @@ export default [
     }
   },
 
-  ...pluginVue.configs['flat/essential'],
-  ...vueTsEslintConfig(),
+  pluginVue.configs['flat/essential'],
+  vueTsConfigs.recommended,
 
   {
     ...pluginVitest.configs.recommended,
     files: ['src/**/__tests__/*']
   },
   skipFormatting
-]
+)

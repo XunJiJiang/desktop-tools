@@ -2,13 +2,10 @@
 import { onUnmounted, ref, shallowRef } from 'vue'
 import config from '@apps/utils/config'
 import logo from '@apps/assets/img/logo.svg'
-// import { getCurrentWindow } from '@tauri-apps/api/window'
-// const appWindow = getCurrentWindow()
+import ipc from '@apps/utils/ipc'
 </script>
 
 <script lang="ts" setup>
-// import ControllerMacOS from './ControllerMacOS.vue'
-// import ControllerWindows from './ControllerWindows.vue'
 import MenuBar from './MenuBar.vue'
 import SearchBar from './SearchBar.vue'
 import ActionBar from './ActionBar.vue'
@@ -28,6 +25,8 @@ const switchTitleBarStyle = (style: 'macos' | 'windows') => {
 }
 
 config.then((c) => {
+  // INFO: 此处 if 分支仅用于开发环境
+  // 生产环境每次启动重新从 navigator 中获取
   if (c.value['title-bar']?.style) {
     titleBarStyle.value = c.value['title-bar'].style
   } else {
@@ -48,10 +47,10 @@ onUnmounted(() => {
 const isFocused = shallowRef(false)
 
 const unListenFns = Promise.all([
-  window.ipcRenderer.on('window:blur', () => {
+  ipc.on('window:blur', () => {
     isFocused.value = false
   }),
-  window.ipcRenderer.on('window:focus', () => {
+  ipc.on('window:focus', () => {
     isFocused.value = true
   })
 ])
@@ -64,7 +63,7 @@ onUnmounted(() => {
   <div
     :class="{
       'title-bar': true,
-      'show-menu': showMenu,
+      'show-action': showMenu,
       focused: isFocused,
       macos: titleBarStyle === 'macos',
       windows: titleBarStyle === 'windows'
@@ -77,14 +76,14 @@ onUnmounted(() => {
 
       <div v-if="titleBarStyle === 'macos'" class="macos-control"></div>
 
-      <MenuBar v-if="showMenu" :titleBarStyle="titleBarStyle" :isFocused />
+      <MenuBar v-if="showMenu" :titleBarStyle :isFocused />
 
       <!-- <div class="placeholder"></div> -->
     </div>
 
     <div class="center">
       <div class="placeholder"></div>
-      <SearchBar :isFocused :title="title" />
+      <SearchBar :isFocused :title="title" :titleBarStyle />
       <div class="placeholder"></div>
     </div>
 
@@ -119,7 +118,7 @@ div {
   font-size: 13px;
   color: var(--base-font-color-2, $base-font-color-2);
 
-  border-bottom: 1px solid #424242;
+  border-bottom: 1px solid #49494947;
   background-color: transparent;
 
   app-region: drag;
@@ -129,14 +128,26 @@ div {
     color: var(--base-font-color-1, $base-font-color-1);
   }
 
-  &.show-menu {
+  &.show-action {
     & > div {
       &.start {
         flex: 1;
       }
 
-      @media screen and (max-width: 670px) {
-        &.end {
+      &.center {
+        justify-content: center;
+
+        @media screen and (max-width: 670px) {
+          flex: 0 0 222px;
+        }
+
+        @media screen and (max-width: 520px) {
+          flex: 0 0 calc(100% - 298px);
+        }
+      }
+
+      &.end {
+        @media screen and (max-width: 670px) {
           flex: 0 0 224px;
         }
       }
@@ -151,17 +162,17 @@ div {
     & > div {
       @media screen and (max-width: 670px) {
         &.center {
-          flex: 6;
+          flex: 0 0 222px;
         }
       }
     }
   }
 
-  &.macos.show-menu {
+  &.macos.show-action {
     & > div {
       @media screen and (max-width: 670px) {
         &.end {
-          flex: 0 0 90px;
+          flex: 1;
         }
       }
     }
@@ -175,7 +186,13 @@ div {
       justify-content: center;
 
       @media screen and (max-width: 670px) {
-        flex: 6;
+        flex: 0 0 222px;
+      }
+    }
+
+    &.end {
+      @media screen and (max-width: 670px) {
+        flex: 0 0 1;
       }
     }
 

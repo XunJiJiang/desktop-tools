@@ -1,5 +1,5 @@
-import type { SelectReturn, TagGroup } from '@fu/db/types'
-import { initDb } from '@fu/db/init'
+import type { SelectReturn, TagGroup } from '@apps/utils/db/types'
+import { initDb } from '@apps/utils/db/init'
 
 /**
  * -- 标签表

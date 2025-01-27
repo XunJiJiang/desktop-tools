@@ -1,5 +1,5 @@
-import type { SelectReturn } from '@fu/db/types'
-import { initDb } from '@fu/db/init'
+import type { SelectReturn } from '@apps/utils/db/types'
+import { initDb } from '@apps/utils/db/init'
 
 /**
  * -- 交易组表

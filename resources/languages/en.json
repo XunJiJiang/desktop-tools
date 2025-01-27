@@ -1,6 +1,8 @@
 {
   "title": {
-    "search": "Search",
+    "search": {
+      "value": "Search"
+    },
     "menu": {
       "file": "File",
       "edit": "Edit",
