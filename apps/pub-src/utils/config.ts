@@ -69,7 +69,9 @@ type Opt = {
 /**
  * 创建配置加载器
  * @param configPath 配置文件路径
+ * @param configId 配置文件id
  * @param delay 写入配置文件的延迟时间
+ * @param opt 配置项
  * @returns
  */
 export const createConfigLoader = async <T = any>(
@@ -305,7 +307,7 @@ const config = (async () =>
           'config:global:update',
           config ? JSON.parse(JSON.stringify(config)) : {}
         )
-      },
+      }
     }
   ))()
 

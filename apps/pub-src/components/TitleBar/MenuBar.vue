@@ -1,69 +1,8 @@
 <script lang="ts">
-import i18n from '@apps/i18n'
-import { onMounted, onUnmounted, useTemplateRef } from 'vue'
-import { getStringWidth } from '@apps/utils/getStringWidth'
-import { createAwaiter } from '../../utils/waitFnRun'
-const menu = [
-  {
-    label: 'file',
-    i18nKey: 'title.menu.file.value',
-    globalKey: 'F',
-    group: []
-  },
-  {
-    label: 'edit',
-    i18nKey: 'title.menu.edit.value',
-    globalKey: 'E',
-    group: []
-  },
-  {
-    label: 'selection',
-    i18nKey: 'title.menu.selection.value',
-    globalKey: 'S',
-    group: []
-  },
-  {
-    label: 'view',
-    i18nKey: 'title.menu.view.value',
-    globalKey: 'V',
-    group: []
-  },
-  {
-    label: 'go',
-    i18nKey: 'title.menu.go.value',
-    globalKey: 'G',
-    group: []
-  },
-  {
-    label: 'terminal',
-    i18nKey: 'title.menu.terminal.value',
-    globalKey: 'T',
-    group: []
-  },
-  {
-    label: 'window',
-    i18nKey: 'title.menu.window.value',
-    globalKey: 'w',
-    group: []
-  },
-  {
-    label: 'help',
-    i18nKey: 'title.menu.help.value',
-    globalKey: 'H',
-    group: []
-  }
-]
-const init = (containerWidth: number) => {
-  console.log('containerWidth', containerWidth)
-  for (const item of menu) {
-    const value = i18n.global.t(item.i18nKey)
-    console.log(getStringWidth(value), value, i18n.global.locale)
-  }
-}
+import { useTemplateRef } from 'vue'
 </script>
 
 <script lang="ts" setup>
-import config from '@apps/utils/config'
 const { titleBarStyle } = defineProps({
   isFocused: {
     type: Boolean,
@@ -75,47 +14,6 @@ const { titleBarStyle } = defineProps({
   }
 })
 const menuBarRef = useTemplateRef<HTMLDivElement | null>('menuBarRef')
-// config.then((c) => {
-//   c.on('language', init)
-// })
-const { promise, resolve } = createAwaiter()
-Promise.all([promise, config]).then(() => {
-  const barWidth = menuBarRef.value?.clientWidth ?? 0
-  init(barWidth)
-})
-// Menu.new().then((m) => {
-//   const submenus: Promise<Submenu | MenuItem>[] = []
-//   for (const item of menu) {
-//     if (titleBarStyle === 'macos') {
-//       const submenu = Submenu.new({
-//         id: item.label,
-//         text: i18n.global.t(item.i18nKey),
-//         enabled: true
-//       })
-//       submenus.push(submenu)
-//     } else {
-//       const submenu = MenuItem.new({
-//         id: item.label,
-//         text: i18n.global.t(item.i18nKey),
-//         enabled: true
-//       })
-//       submenus.push(submenu)
-//     }
-//   }
-//   Promise.all(submenus).then((submenus) => {
-//     for (const submenu of submenus) {
-//       m.append(submenu)
-//     }
-//   })
-// })
-onMounted(() => {
-  resolve()
-})
-onUnmounted(() => {
-  config.then((c) => {
-    c.remove('language', init)
-  })
-})
 </script>
 
 <template>

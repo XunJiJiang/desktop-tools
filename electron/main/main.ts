@@ -59,7 +59,13 @@ function createWindow(
     icon: path.join(process.env.VITE_PUBLIC, 'vite.svg'),
     webPreferences: {
       preload: path.join(MAIN_DIST, 'preload.mjs')
-    }
+    },
+    parent:
+      isMainViewportOnly &&
+      parentWebContents &&
+      BrowserWindow.fromWebContents(parentWebContents)
+        ? BrowserWindow.fromWebContents(parentWebContents)!
+        : void 0
   })
 
   win.webContents.openDevTools({
@@ -69,11 +75,16 @@ function createWindow(
 
   if (!isMainViewportOnly) {
     wins.set(win.webContents, new Set())
-    fullWebContentsWorkspaces.set(win.webContents, '')
+    fullWebContentsWorkspaces.set(win.webContents, '[workspace:temp]')
   } else {
     if (parentWebContents) {
       const childrenWins = wins.get(parentWebContents)
       childrenWins?.add(win.webContents)
+
+      win.on('close', () => {
+        console.log('main 关闭')
+        childrenWins?.delete(win.webContents)
+      })
     }
   }
 
@@ -95,10 +106,6 @@ function createWindow(
       })
     }
     if (!isMainViewportOnly) {
-      const childrenWins = wins.get(win.webContents)
-      childrenWins?.forEach((childWin) => {
-        childWin.close()
-      })
       wins.delete(win.webContents)
       fullWebContentsWorkspaces.delete(win.webContents)
     }
