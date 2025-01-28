@@ -29,9 +29,30 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   ? path.join(process.env.APP_ROOT, 'public')
   : RENDERER_DIST
 
-const wins: Map<Electron.WebContents, Set<Electron.WebContents>> = new Map()
+/** Map<[完整窗口], Set<[仅主窗口]>> */
+const wins: Map<BrowserWindow, Set<BrowserWindow>> = new Map()
 
-const fullWebContentsWorkspaces: Map<Electron.WebContents, string> = new Map()
+/** Map<[完整窗口], [workspace config path]> */
+const fullWinWorkspaces: Map<BrowserWindow, string> = new Map()
+/**
+ * Map<[workspace config path], [完整窗口]>
+ * 当某个 win 没有打开工作区而是 [workspace:temp] 时,
+ * 不会记录到 workspaceFullWins 中
+ */
+const workspaceFullWins: Map<string, BrowserWindow> = new Map()
+
+ipcMain.handle('workspace:hasOpened', (_, path: string) => {
+  return workspaceFullWins.has(path)
+})
+
+ipcMain.handle('workspace:focus', (_, path: string) => {
+  const win = workspaceFullWins.get(path)
+  if (win) {
+    win.focus()
+    return true
+  }
+  return false
+})
 
 app.setName('Desktop Tools')
 
@@ -39,10 +60,10 @@ function createWindow(
   label: string,
   {
     isMainViewportOnly = false,
-    parentWebContents
+    parentBrowserWindow: parentWebContents
   }: {
     isMainViewportOnly?: boolean
-    parentWebContents?: Electron.WebContents
+    parentBrowserWindow?: BrowserWindow | null
   } = {}
 ) {
   const win = new BrowserWindow({
@@ -59,13 +80,7 @@ function createWindow(
     icon: path.join(process.env.VITE_PUBLIC, 'vite.svg'),
     webPreferences: {
       preload: path.join(MAIN_DIST, 'preload.mjs')
-    },
-    parent:
-      isMainViewportOnly &&
-      parentWebContents &&
-      BrowserWindow.fromWebContents(parentWebContents)
-        ? BrowserWindow.fromWebContents(parentWebContents)!
-        : void 0
+    }
   })
 
   win.webContents.openDevTools({
@@ -74,42 +89,59 @@ function createWindow(
   })
 
   if (!isMainViewportOnly) {
-    wins.set(win.webContents, new Set())
-    fullWebContentsWorkspaces.set(win.webContents, '[workspace:temp]')
+    // 对完整视口窗口
+    wins.set(win, new Set())
+    fullWinWorkspaces.set(win, '[workspace:temp]')
   } else {
+    // 对仅主视口窗口
     if (parentWebContents) {
       const childrenWins = wins.get(parentWebContents)
-      childrenWins?.add(win.webContents)
+      childrenWins?.add(win)
 
+      const close = () => {
+        win.close()
+      }
+
+      // 当子窗口关闭时, 移除子窗口
+      // 避免父窗口关闭时重复关闭子窗口
       win.on('close', () => {
-        console.log('main 关闭')
-        childrenWins?.delete(win.webContents)
+        childrenWins?.delete(win)
+        parentWebContents.off('close', close)
       })
+
+      // 当父窗口关闭时, 关闭子窗口
+      parentWebContents.on('close', close)
     }
   }
 
-  win.on('close', () => {
-    const isLastFullViewport = !isMainViewportOnly && wins.size === 1
-    win.webContents.send('window:close', {
-      isLastFullViewport
+  // 对完整视口窗口
+  // 当关闭时, 如果为最后一个完整视口窗口, 则更新配置文件中的 workspace.path
+  if (!isMainViewportOnly) {
+    win.on('close', () => {
+      const isLastFullViewport = wins.size === 1
+      win.webContents.send('window:close', {
+        isLastFullViewport
+      })
+      const workspaceConfigPath = fullWinWorkspaces.get(win) || ''
+      if (isLastFullViewport) {
+        const run = updateConfigFile((c) => {
+          if (c && c.workspace) {
+            c.workspace.path = workspaceConfigPath
+          }
+          return c
+        })
+        win.on('closed', () => {
+          run()
+        })
+      }
+
+      wins.delete(win)
+      fullWinWorkspaces.delete(win)
+      if (workspaceConfigPath && workspaceConfigPath !== '[workspace:temp]') {
+        workspaceFullWins.delete(workspaceConfigPath)
+      }
     })
-    if (isLastFullViewport) {
-      const run = updateConfigFile((c) => {
-        if (c && c.workspace) {
-          c.workspace.path =
-            fullWebContentsWorkspaces.get(win.webContents) || ''
-        }
-        return c
-      })
-      win.on('closed', () => {
-        run()
-      })
-    }
-    if (!isMainViewportOnly) {
-      wins.delete(win.webContents)
-      fullWebContentsWorkspaces.delete(win.webContents)
-    }
-  })
+  }
 
   win.on('focus', () => {
     win.webContents.send('window:focus')
@@ -167,7 +199,9 @@ app
         eventLabel.includes('full-viewport') && label === 'main-viewport-only'
       const win = createWindow(label, {
         isMainViewportOnly,
-        parentWebContents: isMainViewportOnly ? event.sender : undefined
+        parentBrowserWindow: isMainViewportOnly
+          ? BrowserWindow.fromWebContents(event.sender)
+          : void 0
       })
 
       return {
@@ -180,6 +214,18 @@ app
     })
 
     ipcMain.on('workspace:change', (e, path: string) => {
-      fullWebContentsWorkspaces.set(e.sender, path)
+      const win = BrowserWindow.fromWebContents(e.sender)
+      if (!win) {
+        console.error('Error: workspace:change, win 是 undefined')
+        return
+      }
+      const oldPath = fullWinWorkspaces.get(win) || ''
+      fullWinWorkspaces.set(win, path)
+      if (oldPath) {
+        workspaceFullWins.delete(oldPath)
+      }
+      if (path !== '[workspace:temp]') {
+        workspaceFullWins.set(path, win)
+      }
     })
   })

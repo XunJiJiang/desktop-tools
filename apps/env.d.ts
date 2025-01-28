@@ -32,10 +32,7 @@ declare namespace Ipc {
 interface Listener<UnListen = void> {
   (
     channel: 'window:close',
-    listener: (
-      event: IpcRendererEvent,
-      config: any
-    ) => void
+    listener: (event: IpcRendererEvent, config: any) => void
   ): UnListen
   (channel: 'window:focus', listener: () => void): UnListen
   (channel: 'window:blur', listener: () => void): UnListen
@@ -136,4 +133,7 @@ interface Invoke {
 
   (channel: 'i18n:available'): Promise<string[]>
   (channel: 'i18n:load', lang: string): Promise<Lang>
+
+  (channel: 'workspace:hasOpened', path: string): Promise<boolean>
+  (channel: 'workspace:focus', path: string): Promise<boolean>
 }

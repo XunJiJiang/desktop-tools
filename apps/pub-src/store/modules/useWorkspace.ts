@@ -48,14 +48,18 @@ const openData: OpenData = {
 }
 
 export const setOpenData = async (paths: string[], type: OpenData['type']) => {
-  openData.paths = paths
-  openData.type = type
   const hash = createHash(paths.join('-'))
   const workspaceConfigPath = await ipc.invoke(
     'path:join',
     await configDir,
     hash
   )
+  if (await ipc.invoke('workspace:hasOpened', workspaceConfigPath)) {
+    await ipc.invoke('workspace:focus', workspaceConfigPath)
+    return
+  }
+  openData.paths = paths
+  openData.type = type
   openData.workspaceConfigPath = workspaceConfigPath
   ipc.send('workspace:change', openData.workspaceConfigPath)
   console.log(openData)
