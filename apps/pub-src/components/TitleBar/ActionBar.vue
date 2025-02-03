@@ -2,7 +2,7 @@
 
 <script lang="ts" setup>
 import { computed, reactive, watch } from 'vue'
-import IconFont from '../IconFont/IconFont.vue'
+import IconFont from '@comp/IconFont/IconFont.vue'
 import {
   useWorkspace,
   type WorkspaceConfig

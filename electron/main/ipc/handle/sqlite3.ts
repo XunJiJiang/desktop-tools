@@ -29,18 +29,18 @@ const imagesSql = new Promise<string>((resolve) => {
   })
 })
 
-type SupportedValueType = import('../../../../types/sqlite').SupportedValueType
+type SupportedValueType = import('@/types/sqlite').SupportedValueType
 
 type StatementResultingChanges =
-  import('../../../../types/sqlite').StatementResultingChanges
+  import('@/types/sqlite').StatementResultingChanges
 
-type QueryParam = import('../../../../types/sqlite').QueryParam
+type QueryParam = import('@/types/sqlite').QueryParam
 
-type InsertParam = import('../../../../types/sqlite').InsertParam
+type InsertParam = import('@/types/sqlite').InsertParam
 
-type UpdateParam = import('../../../../types/sqlite').UpdateParam
+type UpdateParam = import('@/types/sqlite').UpdateParam
 
-type DeleteParam = import('../../../../types/sqlite').DeleteParam
+type DeleteParam = import('@/types/sqlite').DeleteParam
 
 // ;(async () => {
 //   console.log('---------------')

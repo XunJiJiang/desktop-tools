@@ -1,4 +1,4 @@
-import config from '../utils/config'
+import config from '@apps/utils/config'
 import { useCssVar } from '@apps/store/modules/useCssVar'
 import ipc from '@apps/utils/ipc'
 

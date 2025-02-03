@@ -1,1 +1,1 @@
-export type Settings = import('../../../types/settings').Settings
+export type Settings = import('@/types/settings').Settings

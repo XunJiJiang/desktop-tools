@@ -7,7 +7,7 @@ import { readFile, writeFile } from 'node:fs'
 import { join } from 'node:path'
 import { singleRun } from '@ele/utils/singleRun'
 
-type Config = import('../../../../types/settings').Settings
+type Config = import('@/types/settings').Settings
 
 const defPath = join(resourcesPath(), 'default', 'config.json')
 

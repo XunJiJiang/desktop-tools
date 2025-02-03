@@ -26,7 +26,7 @@ const getAdditionalLanguagesList = async () => {
   })
 }
 
-type Lang = import('../../../../types/language').Lang
+type Lang = import('@/types/language').Lang
 
 const getLanguage = async (lang: string) => {
   return new Promise<Lang>((resolve) => {

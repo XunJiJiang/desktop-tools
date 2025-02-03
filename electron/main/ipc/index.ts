@@ -7,7 +7,7 @@ import i18n from './handle/i18n'
 import useConfig from './handle/config'
 import { createMenu } from '@ele/menu'
 import useMenu from './handle/menu'
-import useCommand from '../store/modules/appCommand'
+import useCommand from '@ele/store/modules/appCommand'
 
 const useHandle = () => {
   usePath()

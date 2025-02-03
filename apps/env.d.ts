@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /// <reference types="vite/client" />
 
-type PathName = import('../types/path').PathName
-type QueryParam = import('../types/sqlite').QueryParam
-type InsertParam = import('../types/sqlite').InsertParam
-type UpdateParam = import('../types/sqlite').UpdateParam
-type DeleteParam = import('../types/sqlite').DeleteParam
+type PathName = import('@/types/path').PathName
+type QueryParam = import('@/types/sqlite').QueryParam
+type InsertParam = import('@/types/sqlite').InsertParam
+type UpdateParam = import('@/types/sqlite').UpdateParam
+type DeleteParam = import('@/types/sqlite').DeleteParam
 
 type UnListen = () => void
 
@@ -47,7 +47,7 @@ interface Listener<UnListen = void> {
     channel: 'config:global:update',
     listener: (
       event: IpcRendererEvent,
-      config: import('../types/settings').Settings
+      config: import('@/types/settings').Settings
     ) => void
   ): UnListen
 
@@ -65,7 +65,7 @@ interface Send {
 
 type PathLike = string | Buffer<ArrayBufferLike> | URL
 
-type Lang = import('../types/language').Lang
+type Lang = import('@/types/language').Lang
 
 interface Invoke {
   (channel: 'sq:open'): Promise<void>
