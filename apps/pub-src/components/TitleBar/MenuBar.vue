@@ -1,5 +1,6 @@
 <script lang="ts">
-import { useTemplateRef } from 'vue'
+import { onUnmounted, useTemplateRef } from 'vue'
+import ipc from '@apps/utils/ipc'
 </script>
 
 <script lang="ts" setup>
@@ -13,7 +14,13 @@ const { titleBarStyle } = defineProps({
     required: true
   }
 })
-const menuBarRef = useTemplateRef<HTMLDivElement | null>('menuBarRef')
+const menuBarRef = useTemplateRef<HTMLDivElement>('menuBarRef')
+const unListerFn = ipc.on('menu:update', (_, menu) => {
+  console.log(menu)
+})
+onUnmounted(() => {
+  unListerFn()
+})
 </script>
 
 <template>

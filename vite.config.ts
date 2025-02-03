@@ -17,6 +17,7 @@ export default defineConfig(async () => ({
         vite: {
           resolve: {
             alias: {
+              '@': joinTo(),
               '@ele': joinTo('electron/main')
             }
           }

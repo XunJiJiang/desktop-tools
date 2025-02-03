@@ -3,10 +3,11 @@ import { getValue } from '@ele/utils/getValue'
 
 const isMac = process.platform === 'darwin'
 
-type Lang = import('../../../types/language').Lang
+type Lang = import('@/types/language').Lang
 
-export const createAppMenu = (lang: Lang) =>
-  Menu.buildFromTemplate([
+const createMenuTemplate = (lang: Lang) =>
+  [
+    // macOS 应用程序
     ...((isMac
       ? [
           {
@@ -16,7 +17,7 @@ export const createAppMenu = (lang: Lang) =>
               { type: 'separator' },
               {
                 role: 'about',
-                label: getValue(lang, 'title.menu.appMenu.items.about', 'About')
+                label: `${getValue(lang, 'title.menu.appMenu.items.about', 'About')} ${app.getName()}`
               },
               {
                 label: getValue(
@@ -103,6 +104,7 @@ export const createAppMenu = (lang: Lang) =>
           }
         ]
       : []) as Electron.MenuItemConstructorOptions[]),
+    // 文件
     {
       label: getValue(lang, 'title.menu.file.value', 'File'),
       submenu: [
@@ -214,6 +216,7 @@ export const createAppMenu = (lang: Lang) =>
         }
       ]
     },
+    // 编辑
     {
       role: 'editMenu',
       label: getValue(lang, 'title.menu.edit.value', 'Edit'),
@@ -268,27 +271,10 @@ export const createAppMenu = (lang: Lang) =>
             'Replace in Files'
           ),
           accelerator: isMac ? 'Cmd+Shift+H' : 'Ctrl+Shift+H'
-        },
-        { type: 'separator' },
-        {
-          label: getValue(lang, 'title.menu.edit.items.autoFill', 'Auto Fill')
-        },
-        {
-          label: getValue(
-            lang,
-            'title.menu.edit.items.dictation',
-            'Start Dictation'
-          )
-        },
-        {
-          label: getValue(
-            lang,
-            'title.menu.edit.items.emoticonsSymbols',
-            'Emoticons & Symbols'
-          )
         }
       ]
     },
+    // 选择
     {
       label: getValue(lang, 'title.menu.selection.value', 'Selection'),
       submenu: [
@@ -352,6 +338,7 @@ export const createAppMenu = (lang: Lang) =>
         }
       ]
     },
+    // 查看
     {
       label: getValue(lang, 'title.menu.view.value', 'View'),
       submenu: [
@@ -429,18 +416,261 @@ export const createAppMenu = (lang: Lang) =>
         }
       ]
     },
+    // 转到
     {
-      label: getValue(lang, 'title.menu.go.value', 'Go')
+      label: getValue(lang, 'title.menu.go.value', 'Go'),
+      submenu: [
+        {
+          label: getValue(lang, 'title.menu.go.items.back', 'Back'),
+          accelerator: isMac ? 'Ctrl+-' : 'Alt+Left'
+        },
+        {
+          label: getValue(lang, 'title.menu.go.items.forward', 'Forward'),
+          accelerator: isMac ? 'Ctrl+Shift+-' : 'Alt+Right'
+        },
+        {
+          label: getValue(
+            lang,
+            'title.menu.go.items.lastEditLocation',
+            'Last Edit Location'
+          )
+        },
+        { type: 'separator' },
+        {
+          label: getValue(
+            lang,
+            'title.menu.go.items.switchTab.value',
+            'Switch Tab'
+          ),
+          // TODO: 验证此处 win 平台的快捷键是否正确
+          submenu: [
+            {
+              label: getValue(
+                lang,
+                'title.menu.go.items.switchTab.items.previous',
+                'Previous'
+              ),
+              accelerator: isMac ? 'Cmd+Alt+Left' : 'Ctrl+Shift+Tab'
+            },
+            {
+              label: getValue(
+                lang,
+                'title.menu.go.items.switchTab.items.next',
+                'Next'
+              ),
+              accelerator: isMac ? 'Cmd+Alt+Right' : 'Ctrl+Tab'
+            }
+          ]
+        },
+        { type: 'separator' },
+        {
+          label: getValue(lang, 'title.menu.go.items.goToFile', 'Go to File')
+        },
+        {
+          label: getValue(
+            lang,
+            'title.menu.go.items.goToRowColumn',
+            'Go to Row/Column'
+          ),
+          accelerator: 'Alt+G'
+        }
+      ]
     },
+    // 终端
     {
-      label: getValue(lang, 'title.menu.terminal.value', 'Terminal')
+      label: getValue(lang, 'title.menu.terminal.value', 'Terminal'),
+      submenu: [
+        {
+          label: getValue(
+            lang,
+            'title.menu.terminal.items.newTerminal',
+            'New Terminal'
+          ),
+          accelerator: 'Ctrl+Shift+`'
+        },
+        {
+          label: getValue(
+            lang,
+            'title.menu.terminal.items.clearTerminal',
+            'Clear Terminal'
+          )
+        },
+        { type: 'separator' },
+        {
+          label: getValue(
+            lang,
+            'title.menu.terminal.items.runTask',
+            'Run Task...'
+          )
+        },
+        {
+          label: getValue(
+            lang,
+            'title.menu.terminal.items.runSelectedText',
+            'Run Selected Text'
+          )
+        },
+        { type: 'separator' },
+        {
+          label: getValue(
+            lang,
+            'title.menu.terminal.items.killTask',
+            'Kill Task'
+          )
+        }
+      ]
     },
-    {
-      role: 'windowMenu',
-      label: getValue(lang, 'title.menu.window.value', 'Window')
-    },
+    // macOS 窗口
+    ...((isMac
+      ? [
+          {
+            role: 'windowMenu',
+            label: getValue(lang, 'title.menu.window.value', 'Window'),
+            submenu: [
+              {
+                role: 'minimize',
+                label: getValue(
+                  lang,
+                  'title.menu.window.items.minimize',
+                  'Minimize'
+                )
+              },
+              {
+                role: 'zoom',
+                label: getValue(lang, 'title.menu.window.items.zoom', 'Zoom')
+              },
+              { type: 'separator' },
+              {
+                role: 'front',
+                label: getValue(
+                  lang,
+                  'title.menu.window.items.bringAllToFront',
+                  'Bring All to Front'
+                )
+              }
+            ]
+          }
+        ]
+      : []) as Electron.MenuItemConstructorOptions[]),
+    // 帮助
     {
       role: 'help',
-      label: getValue(lang, 'title.menu.help.value', 'Help')
+      label: getValue(lang, 'title.menu.help.value', 'Help'),
+      submenu: [
+        {
+          label: getValue(lang, 'title.menu.help.items.search', 'Search'),
+          accelerator: isMac ? 'Cmd+P' : 'Ctrl+P'
+        },
+        { type: 'separator' },
+        {
+          label: getValue(
+            lang,
+            'title.menu.help.items.showAllCommands',
+            'Show All Commands'
+          )
+        },
+        {
+          label: getValue(
+            lang,
+            'title.menu.help.items.documentation',
+            'Documentation'
+          )
+        },
+        {
+          label: getValue(
+            lang,
+            'title.menu.help.items.releaseNotes',
+            'Release Notes'
+          )
+        },
+        { type: 'separator' },
+        {
+          label: getValue(
+            lang,
+            'title.menu.help.items.reportIssue',
+            'Report Issue'
+          )
+        },
+        {
+          label: getValue(
+            lang,
+            'title.menu.help.items.featureRequests',
+            'Feature Requests'
+          )
+        },
+        { type: 'separator' },
+        {
+          label: getValue(
+            lang,
+            'title.menu.help.items.viewLicense',
+            'View License'
+          )
+        },
+        {
+          label: getValue(
+            lang,
+            'title.menu.help.items.privacyStatement',
+            'Privacy Statement'
+          )
+        },
+        { type: 'separator' },
+        {
+          label: getValue(
+            lang,
+            'title.menu.help.items.toggleDevTools',
+            'Toggle Developer Tools'
+          )
+        },
+        ...((!isMac
+          ? []
+          : [
+              { type: 'separator' },
+              {
+                label: `${getValue(lang, 'title.menu.help.items.about', 'About')} ${app.getName()}`
+              },
+              {
+                label: getValue(
+                  lang,
+                  'title.menu.help.items.checkForUpdates',
+                  'Check for Updates'
+                )
+              }
+            ]) as Electron.MenuItemConstructorOptions[])
+      ]
     }
-  ])
+  ] as Electron.MenuItemConstructorOptions[]
+
+/**
+ * 创建应用程序菜单
+ */
+export const createAppMenu = (lang: Lang) =>
+  Menu.buildFromTemplate(createMenuTemplate(lang))
+
+/**
+ * 创建应用程序菜单(基于createMenuTemplate, 排除函数属性)
+ * 用于非 macOS 创建应用程序菜单
+ */
+export const createWinMenu = (lang: Lang) => {
+  const menu = createMenuTemplate(lang)
+  function filterFunc(
+    menu: Electron.MenuItemConstructorOptions[]
+  ): Electron.MenuItemConstructorOptions[] {
+    return menu.map((item: Electron.MenuItemConstructorOptions) => {
+      if (item.submenu) {
+        item.submenu = filterFunc(
+          item.submenu as Electron.MenuItemConstructorOptions[]
+        )
+      }
+      for (const key in item) {
+        if (
+          typeof item[key as keyof Electron.MenuItemConstructorOptions] ===
+          'function'
+        ) {
+          delete item[key as keyof Electron.MenuItemConstructorOptions]
+        }
+      }
+      return item
+    })
+  }
+  return filterFunc(menu)
+}

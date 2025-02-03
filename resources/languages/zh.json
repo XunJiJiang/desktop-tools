@@ -64,10 +64,7 @@
           "find": "查找",
           "replace": "替换",
           "findInFiles": "在文件中查找",
-          "replaceInFiles": "在文件中替换",
-          "autoFill": "自动填充",
-          "dictation": "开始听写",
-          "emoticonsSymbols": "表情符号"
+          "replaceInFiles": "在文件中替换"
         }
       },
       "selection": {
@@ -101,16 +98,55 @@
         }
       },
       "go": {
-        "value": "转到"
+        "value": "转到",
+        "items": {
+          "back": "返回",
+          "forward": "前进",
+          "lastEditLocation": "上次编辑位置",
+          "switchTab": {
+            "value": "切换标签",
+            "items": {
+              "previous": "上一个",
+              "next": "下一个"
+            }
+          },
+          "goToFile": "转到文件",
+          "goToRowColumn": "转到行/列"
+        }
       },
       "terminal": {
-        "value": "终端"
+        "value": "终端",
+        "items": {
+          "newTerminal": "新建终端",
+          "clearTerminal": "清空终端",
+          "runTask": "运行任务...",
+          "runSelectedText": "运行所选文本",
+          "killTask": "终止任务"
+        }
       },
       "window": {
-        "value": "窗口"
+        "value": "窗口",
+        "items": {
+          "minimize": "最小化",
+          "zoom": "最大化",
+          "bringAllToFront": "全部置于顶层"
+        }
       },
       "help": {
-        "value": "帮助"
+        "value": "帮助",
+        "items": {
+          "search": "搜索",
+          "showAllCommands": "显示所有命令",
+          "documentation": "文档",
+          "releaseNotes": "发行说明",
+          "reportIssue": "报告问题",
+          "featureRequests": "功能请求",
+          "viewLicense": "查看许可证",
+          "privacyStatement": "隐私声明",
+          "toggleDevTools": "切换开发者工具",
+          "about": "关于",
+          "checkForUpdates": "检查更新"
+        }
       }
     }
   }

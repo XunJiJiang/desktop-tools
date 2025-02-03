@@ -5,6 +5,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import useIpc from './ipc'
 import { updateConfigFile } from './ipc/handle/config'
+import useWindowStore from './store/modules/windows'
 
 // const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -20,7 +21,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // │
 process.env.APP_ROOT = path.join(__dirname, '..')
 
-// 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
 export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
@@ -29,17 +29,11 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   ? path.join(process.env.APP_ROOT, 'public')
   : RENDERER_DIST
 
-/** Map<[完整窗口], Set<[仅主窗口]>> */
-const wins: Map<BrowserWindow, Set<BrowserWindow>> = new Map()
-
-/** Map<[完整窗口], [workspace config path]> */
-const fullWinWorkspaces: Map<BrowserWindow, string> = new Map()
-/**
- * Map<[workspace config path], [完整窗口]>
- * 当某个 win 没有打开工作区而是 [workspace:temp] 时,
- * 不会记录到 workspaceFullWins 中
- */
-const workspaceFullWins: Map<string, BrowserWindow> = new Map()
+const {
+  wins,
+  fullWinWorkspaces,
+  workspaceFullWins
+} = useWindowStore()
 
 ipcMain.handle('workspace:hasOpened', (_, path: string) => {
   return workspaceFullWins.has(path)
@@ -80,7 +74,9 @@ function createWindow(
     icon: path.join(process.env.VITE_PUBLIC, 'vite.svg'),
     webPreferences: {
       preload: path.join(MAIN_DIST, 'preload.mjs')
-    }
+    },
+    vibrancy: 'fullscreen-ui', // on MacOS
+    backgroundMaterial: 'acrylic' // on Windows 11
   })
 
   win.webContents.openDevTools({
@@ -226,6 +222,13 @@ app
       }
       if (path !== '[workspace:temp]') {
         workspaceFullWins.set(path, win)
+      }
+    })
+
+    ipcMain.on('window:set-title', (e, title: string) => {
+      const win = BrowserWindow.fromWebContents(e.sender)
+      if (win) {
+        win.setTitle(title)
       }
     })
   })

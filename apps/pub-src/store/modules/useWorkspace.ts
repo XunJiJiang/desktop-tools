@@ -6,6 +6,9 @@ import config, {
 } from '@apps/utils/config'
 import { createHash } from '@apps/utils/createHash'
 import ipc from '@apps/utils/ipc'
+
+import type { DeepPartial } from '@/types/utils/DeepPartial'
+import { mergeObject } from '@apps/utils/mergeObject'
 // import { asyncArrayEvery } from '@apps/utils/asyncArrayEvery'
 
 const configDir = (async () => {
@@ -19,6 +22,8 @@ const workspaceConfig = shallowRef<ConfigHandler<WorkspaceConfig> | null>()
 type PanelConfig = {
   show: boolean
 }
+
+// TODO: 当开发清理缓存功能时, 需要清理类型为 files 的工作区
 
 export type WorkspaceConfig = {
   type: 'files' | 'dir' | 'temp'
@@ -64,37 +69,93 @@ export const setOpenData = async (paths: string[], type: OpenData['type']) => {
   ipc.send('workspace:change', openData.workspaceConfigPath)
   console.log(openData)
   if (workspaceConfig.value) {
+    const oldWorkspaceConfig = workspaceConfig.value.value
+
+    // 如果新工作区类型为files, 且旧工作区类型为dir, 则不更新文件配置, 将文件插入到 open-file-path
+    if (oldWorkspaceConfig.type === 'dir' && type === 'files') {
+      workspaceConfig.value.update('open-file-path', [
+        ...(oldWorkspaceConfig['open-file-path'] ?? []),
+        ...paths
+      ])
+      return
+    }
+
     workspaceConfig.value.close()
     workspaceConfig.value =
       await createConfigLoader<WorkspaceConfig>(workspaceConfigPath)
-    if (!workspaceConfig.value?.value?.type) {
-      workspaceConfig.value?.update(
-        '[update:all]',
-        createDefaultWorkspaceConfig(openData)
+    workspaceConfig.value?.update(
+      '[update:all]',
+      createDefaultWorkspaceConfig(
+        openData,
+        oldWorkspaceConfig,
+        workspaceConfig.value.value
       )
-    }
+    )
   }
 }
 
-const createDefaultWorkspaceConfig = (openData: OpenData): WorkspaceConfig => {
-  return {
-    type: openData.type === 'never' ? 'temp' : openData.type,
-    dir: openData.type === 'dir' ? openData.paths[0] : null,
-    'open-file-path': openData.type === 'dir' ? [] : [...openData.paths],
-    'title-bar': {
-      'action-bar': {
-        'left-panel': {
-          show: false
-        },
-        'layout-panel': {
-          show: false
-        },
-        'right-panel': {
-          show: false
-        }
+const createBaseWorkspaceConfig = (): WorkspaceConfig => ({
+  type: 'temp',
+  dir: null,
+  'open-file-path': [],
+  'title-bar': {
+    'action-bar': {
+      'left-panel': {
+        show: false
+      },
+      'layout-panel': {
+        show: false
+      },
+      'right-panel': {
+        show: false
       }
     }
   }
+})
+
+/**
+ *
+ * @param openData 打开的数据的参数
+ * @param oldConfig 上一个工作区的配置
+ * @param thisConfig 当前工作区的历史配置, 若为第一次打开，则为 {}
+ * @returns
+ */
+const createDefaultWorkspaceConfig = (
+  openData: OpenData,
+  oldConfig: DeepPartial<WorkspaceConfig>,
+  thisConfig: DeepPartial<WorkspaceConfig>
+): WorkspaceConfig => {
+  // 如果新工作区类型为files, 则继承(不包括文件路径)其他配置
+  if (openData.type === 'files') {
+    // 旧工作区类型为temp, 则type为files
+    // 旧工作区类型为files, 则合并文件路径
+    return {
+      ...mergeObject(createBaseWorkspaceConfig(), oldConfig)[1],
+      type: oldConfig.type === 'temp' ? 'files' : openData.type,
+      dir: null,
+      'open-file-path':
+        oldConfig.type === 'files'
+          ? [...(oldConfig['open-file-path'] ?? []), ...openData.paths]
+          : openData.paths
+    }
+  }
+
+  // 如果新工作区类型为dir, 则直接使用新工作区配置
+  if (openData.type === 'dir') {
+    return {
+      ...mergeObject(createBaseWorkspaceConfig(), thisConfig)[1],
+      type: openData.type,
+      dir: openData.paths[0],
+      'open-file-path': []
+    }
+  }
+
+  // 如果新工作区类型为temp, 则使用默认配置
+  if (openData.type === 'temp') {
+    return createBaseWorkspaceConfig()
+  }
+
+  return createBaseWorkspaceConfig()
 }
 
 /** 临时配置文件标识 */
@@ -126,7 +187,7 @@ config.then(async (c) => {
       openData.workspaceConfigPath = tempConfigPath
       workspaceConfig.value?.update(
         '[update:all]',
-        createDefaultWorkspaceConfig(openData)
+        createDefaultWorkspaceConfig(openData, {}, {})
       )
     }
   } catch {

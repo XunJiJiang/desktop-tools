@@ -3,6 +3,7 @@ import { onUnmounted, ref, shallowRef } from 'vue'
 import config from '@apps/utils/config'
 import logo from '@apps/assets/img/logo.svg'
 import ipc from '@apps/utils/ipc'
+import { isWindows } from '@apps/utils/userAgent'
 </script>
 
 <script lang="ts" setup>
@@ -27,11 +28,12 @@ const switchTitleBarStyle = (style: 'macos' | 'windows') => {
 config.then((c) => {
   // INFO: 此处 if 分支仅用于开发环境
   // 生产环境每次启动重新从 navigator 中获取
+  // 对于linux系统, 由于无法获取到系统信息, 所以默认为macos, 允许用户自行选择
+  // windows 和 macos 系统, 会根据系统类型自动选择, 不允许用户自行选择
   if (c.value['title-bar']?.style) {
     titleBarStyle.value = c.value['title-bar'].style
   } else {
-    titleBarStyle.value =
-      navigator.userAgent.indexOf('Windows NT') !== -1 ? 'windows' : 'macos'
+    titleBarStyle.value = isWindows ? 'windows' : 'macos'
     c.update('title-bar.style', titleBarStyle.value)
   }
   c.on('title-bar.style', (style) => {

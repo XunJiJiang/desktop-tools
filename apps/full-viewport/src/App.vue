@@ -4,6 +4,7 @@ import i18n from '@/apps/pub-src/i18n'
 import config from '@/apps/pub-src/utils/config'
 import { shallowRef, watch } from 'vue'
 import ipc from '@apps/utils/ipc'
+import { isMac } from '@apps/utils/userAgent'
 
 async function textBillAnalysis() {
   const input = document.createElement('input')
@@ -51,13 +52,17 @@ const { locale } = useI18n({
 useFileDrop('container', (e) => {
   console.log(e)
 })
-const alphaRef = shallowRef(255)
+const alphaRef = shallowRef(0)
 config.then((c) => {
-  alphaRef.value = c.value['bg-transparency'] || 255
+  alphaRef.value = isMac ? 0 : (c.value['bg-transparency'] || 255)
 })
+setTimeout(() => {
+  console.log(alphaRef.value)
+}, 1000)
 watch(alphaRef, (v) => {
+  const _v = isMac ? 0 : v
   config.then((c) => {
-    c.update('bg-transparency', Number(v))
+    c.update('bg-transparency', Number(_v))
   })
 })
 </script>

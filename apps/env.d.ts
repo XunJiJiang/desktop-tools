@@ -29,6 +29,12 @@ declare namespace Ipc {
   export type getPathForFile = (file: File) => string
 }
 
+type EasyMenu = {
+  label?: string
+  accelerator?: string
+  submenu?: EasyMenu[]
+}[]
+
 interface Listener<UnListen = void> {
   (
     channel: 'window:close',
@@ -43,6 +49,11 @@ interface Listener<UnListen = void> {
       event: IpcRendererEvent,
       config: import('../types/settings').Settings
     ) => void
+  ): UnListen
+
+  (
+    channel: 'menu:update',
+    listener: (event: IpcRendererEvent, menu: any) => void
   ): UnListen
 }
 
@@ -136,4 +147,6 @@ interface Invoke {
 
   (channel: 'workspace:hasOpened', path: string): Promise<boolean>
   (channel: 'workspace:focus', path: string): Promise<boolean>
+
+  (channel: 'menu:get'): Promise<EasyMenu>
 }

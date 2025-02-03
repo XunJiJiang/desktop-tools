@@ -1,12 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { reactive, watch } from 'vue'
 import ipc from '@apps/utils/ipc'
+import type { DeepPartial } from '@/types/utils/DeepPartial'
 
 type ConfigValue = string | number | boolean | object | null
-
-type DeepPartial<T> = T extends object
-  ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : T
 
 type UpdateConfig<T, P extends string> = P extends '[update:all]'
   ? T
@@ -103,21 +100,21 @@ const loadConfig = async <T>(
       )
     )
   } else {
-    const defaultConfig = JSON.parse(await ipc.invoke('config:default'))
+    const defaultConfig = isGlobal ? JSON.parse(await ipc.invoke('config:default')) : {}
     await ipc.invoke('fs:mkdir', appConfigPath, {
       recursive: true
     })
     ipc.invoke(
       'fs:writefile',
       appFullConfigId,
-      JSON.stringify(isGlobal ? defaultConfig : {}, null, 2),
+      JSON.stringify(defaultConfig, null, 2),
       {
         encoding: 'utf-8'
       }
     )
     onConfigChange(config)
     isCurrentViewChange = false
-    config = reactive(isGlobal ? defaultConfig : {})
+    config = reactive(defaultConfig)
   }
 
   const eventMap = new Map<string, Set<(config: any) => void>>()

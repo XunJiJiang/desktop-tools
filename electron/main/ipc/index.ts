@@ -6,14 +6,17 @@ import useWindow from './handle/window'
 import i18n from './handle/i18n'
 import useConfig from './handle/config'
 import { createMenu } from '@ele/menu'
+import useMenu from './handle/menu'
 
 const useHandle = () => {
   usePath()
   useFs()
   useSqlite()
   useWindow()
+  const { updateMenu } = useMenu()
   const { onLanguageUpdated } = i18n((lang) => {
     createMenu(lang)
+    updateMenu(lang)
   })
   useConfig({
     onUpdated: (config) => {
