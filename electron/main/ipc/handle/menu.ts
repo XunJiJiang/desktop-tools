@@ -1,12 +1,13 @@
 import { createWinMenu } from '@ele/menu/template'
 import useWindowStore from '@ele/store/modules/windows'
 import { ipcMain } from 'electron'
+import { singleRun } from '@ele/utils/singleRun'
 
 type Lang = import('@/types/language').Lang
 
 const { wins } = useWindowStore()
 
-const useMenu = () => {
+const useMenu = singleRun(() => {
   let menu: Electron.MenuItemConstructorOptions[] | null = null
 
   ipcMain.handle('menu:get', () => {
@@ -22,6 +23,6 @@ const useMenu = () => {
       })
     }
   }
-}
+})
 
 export default useMenu

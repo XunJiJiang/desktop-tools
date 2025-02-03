@@ -39,6 +39,13 @@ const changeLanguage = (event: Event) => {
   i18n.global.locale.value = (event.target as HTMLSelectElement)
     .value as (typeof languages)[number][0]
 }
+const commandSubmit = (e: Event) => {
+  e.preventDefault()
+  const input = document.querySelector('#command-form input') as HTMLInputElement
+  const command = input.value
+  ipc.invoke('command:parseAndRun', command)
+  input.value = ''
+}
 </script>
 
 <script setup lang="ts">
@@ -90,6 +97,9 @@ watch(alphaRef, (v) => {
           </option>
         </select>
         <input type="range" min="0" max="255" step="1" v-model="alphaRef" />
+        <form id="command-form" @submit="commandSubmit">
+          <input type="text" />
+        </form>
       </div>
     </main>
   </div>

@@ -149,4 +149,6 @@ interface Invoke {
   (channel: 'workspace:focus', path: string): Promise<boolean>
 
   (channel: 'menu:get'): Promise<EasyMenu>
+
+  <T = void>(channel: 'command:parseAndRun', node: CommandNode): Promise<T>
 }

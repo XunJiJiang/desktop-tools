@@ -5,6 +5,7 @@ import { readFile } from 'node:fs'
 // import sq from 'node:sqlite'
 import SqDatabase from 'better-sqlite3'
 import { resourcesPath } from '@ele/utils/resourcesPath'
+import { singleRun } from '@ele/utils/singleRun'
 
 const accountBookCreateSql = new Promise<string>((resolve) => {
   readFile(
@@ -249,7 +250,7 @@ const dbPath = join(userDataPath, 'sqliteDatabase.db')
 
 const db = new Database()
 
-const useSqlite = () => {
+const useSqlite = singleRun(() => {
   ipcMain.handle('sq:open', async () => {
     await db.open()
   })
@@ -277,6 +278,6 @@ const useSqlite = () => {
   ipcMain.handle('sq:state', async () => {
     return db.state
   })
-}
+})
 
 export default useSqlite

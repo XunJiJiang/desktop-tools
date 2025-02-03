@@ -1,4 +1,5 @@
-import { BrowserWindow } from "electron"
+import { BrowserWindow } from 'electron'
+import { singleRun } from '@ele/utils/singleRun'
 
 /** Map<[完整窗口], Set<[仅主窗口]>> */
 const wins: Map<BrowserWindow, Set<BrowserWindow>> = new Map()
@@ -12,12 +13,12 @@ const fullWinWorkspaces: Map<BrowserWindow, string> = new Map()
  */
 const workspaceFullWins: Map<string, BrowserWindow> = new Map()
 
-const useWindowStore = () => {
+const useWindowStore = singleRun(() => {
   return {
     wins,
     fullWinWorkspaces,
     workspaceFullWins
   }
-}
+})
 
 export default useWindowStore

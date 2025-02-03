@@ -3,8 +3,9 @@ import { resourcesPath } from '@ele/utils/resourcesPath'
 import { ipcMain } from 'electron'
 import fs from 'node:fs'
 import { join } from 'node:path'
+import { singleRun } from '@ele/utils/singleRun'
 
-const useFs = () => {
+const useFs = singleRun(() => {
   ipcMain.handle('fs:exists', async (_, path: fs.PathLike) => {
     return new Promise<boolean>((resolve) => {
       fs.access(path, fs.constants.F_OK, (err) => {
@@ -128,6 +129,6 @@ const useFs = () => {
       })
     })
   })
-}
+})
 
 export default useFs

@@ -2,6 +2,7 @@ import { resourcesPath } from '@ele/utils/resourcesPath'
 import { app, ipcMain } from 'electron'
 import { mkdir, readdir, readFile } from 'node:fs'
 import { join, parse } from 'node:path'
+import { singleRun } from '@ele/utils/singleRun'
 
 const defLanguagesPath = join(resourcesPath(), 'languages')
 
@@ -51,7 +52,7 @@ const getLanguage = async (lang: string) => {
   })
 }
 
-const useI18n = (callback: (lang: Lang) => void) => {
+const useI18n = singleRun((callback: (lang: Lang) => void) => {
   let local = ''
 
   ipcMain.handle('i18n:available', async () => {
@@ -71,6 +72,6 @@ const useI18n = (callback: (lang: Lang) => void) => {
       })
     }
   }
-}
+})
 
 export default useI18n

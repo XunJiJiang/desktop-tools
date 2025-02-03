@@ -5,6 +5,7 @@ import { resourcesPath } from '@ele/utils/resourcesPath'
 import { app, ipcMain, webContents } from 'electron'
 import { readFile, writeFile } from 'node:fs'
 import { join } from 'node:path'
+import { singleRun } from '@ele/utils/singleRun'
 
 type Config = import('../../../../types/settings').Settings
 
@@ -50,7 +51,7 @@ export const updateConfigFile = (
 }
 
 let config: object
-const useConfig = (args: { onUpdated: (config: Config) => void }) => {
+const useConfig = singleRun((args: { onUpdated: (config: Config) => void }) => {
   readFile(configPath, 'utf-8', async (err, data) => {
     if (err) {
       const _config = await writeDefaultConfig()
@@ -87,6 +88,6 @@ const useConfig = (args: { onUpdated: (config: Config) => void }) => {
       w.send('config:global:update', config)
     })
   })
-}
+})
 
 export default useConfig
