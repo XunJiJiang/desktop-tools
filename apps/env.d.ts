@@ -61,6 +61,8 @@ interface Send {
   (channel: 'config:global:update', config: object): void
 
   (channel: 'workspace:change', path: string): void
+
+  (channel: 'command:parseAndRun', fullCommand: string): void
 }
 
 type PathLike = string | Buffer<ArrayBufferLike> | URL
@@ -150,5 +152,16 @@ interface Invoke {
 
   (channel: 'menu:get'): Promise<EasyMenu>
 
-  <T = void>(channel: 'command:parseAndRun', node: CommandNode): Promise<T>
+  (
+    channel: 'command:fuzzyParse',
+    fullCommand: string
+  ): Promise<
+    [
+      string,
+      {
+        command: string
+        comment: string
+      }[]
+    ]
+  >
 }

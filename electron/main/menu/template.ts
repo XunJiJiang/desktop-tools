@@ -1,4 +1,4 @@
-import { app, Menu } from 'electron'
+import { app, BrowserWindow, Menu } from 'electron'
 import { getValue } from '@ele/utils/getValue'
 
 const isMac = process.platform === 'darwin'
@@ -619,7 +619,13 @@ const createMenuTemplate = (lang: Lang) =>
             lang,
             'title.menu.help.items.toggleDevTools',
             'Toggle Developer Tools'
-          )
+          ),
+          accelerator: process.env.NODE_ENV === 'development' ? 'F12' : '',
+          click: (_, focusedWindow) => {
+            if (focusedWindow && focusedWindow instanceof BrowserWindow) {
+              focusedWindow.webContents.toggleDevTools()
+            }
+          }
         },
         ...((!isMac
           ? []

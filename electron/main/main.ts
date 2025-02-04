@@ -6,6 +6,7 @@ import fs from 'node:fs'
 import useIpc from './ipc'
 import { updateConfigFile } from './ipc/handle/config'
 import useWindowStore from './store/modules/windows'
+import useCommand from './store/modules/command'
 
 // const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -77,11 +78,6 @@ function createWindow(
     },
     vibrancy: 'fullscreen-ui', // on MacOS
     backgroundMaterial: 'acrylic' // on Windows 11
-  })
-
-  win.webContents.openDevTools({
-    mode: 'detach',
-    activate: false
   })
 
   if (!isMainViewportOnly) {
@@ -186,7 +182,10 @@ app.on('activate', () => {
 
 app
   .whenReady()
-  .then(useIpc)
+  .then(() => {
+    useCommand()
+    useIpc()
+  })
   .then(() => createWindow('full-viewport'))
   .then(() => {
     ipcMain.handle('window:new', async (event, label: string) => {

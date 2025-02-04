@@ -2,7 +2,7 @@
 import ba from './utils/text-bill-analysis'
 import i18n from '@/apps/pub-src/i18n'
 import config from '@/apps/pub-src/utils/config'
-import { shallowRef, watch } from 'vue'
+import { shallowRef, useTemplateRef, watch } from 'vue'
 import ipc from '@apps/utils/ipc'
 import { isMac } from '@apps/utils/userAgent'
 
@@ -39,13 +39,6 @@ const changeLanguage = (event: Event) => {
   i18n.global.locale.value = (event.target as HTMLSelectElement)
     .value as (typeof languages)[number][0]
 }
-const commandSubmit = (e: Event) => {
-  e.preventDefault()
-  const input = document.querySelector('#command-form input') as HTMLInputElement
-  const command = input.value
-  ipc.invoke('command:parseAndRun', command)
-  input.value = ''
-}
 </script>
 
 <script setup lang="ts">
@@ -61,7 +54,7 @@ useFileDrop('container', (e) => {
 })
 const alphaRef = shallowRef(0)
 config.then((c) => {
-  alphaRef.value = isMac ? 0 : (c.value['bg-transparency'] || 255)
+  alphaRef.value = isMac ? 0 : c.value['bg-transparency'] || 255
 })
 setTimeout(() => {
   console.log(alphaRef.value)
@@ -72,6 +65,19 @@ watch(alphaRef, (v) => {
     c.update('bg-transparency', Number(_v))
   })
 })
+const commandForm = useTemplateRef<HTMLFormElement>('command-form')
+const commandSubmit = (e: SubmitEvent) => {
+  e.preventDefault()
+  if (!commandForm.value) return
+  const command = new FormData(commandForm.value).get('command') as string
+  console.dir(command)
+  ipc.send('command:parseAndRun', command)
+  commandForm.value?.reset()
+}
+const commandChange = async (e: Event) => {
+  const command = (e.target as HTMLInputElement).value
+  console.log(await ipc.invoke('command:fuzzyParse', command))
+}
 </script>
 
 <template>
@@ -97,8 +103,8 @@ watch(alphaRef, (v) => {
           </option>
         </select>
         <input type="range" min="0" max="255" step="1" v-model="alphaRef" />
-        <form id="command-form" @submit="commandSubmit">
-          <input type="text" />
+        <form id="command-form" @submit="commandSubmit" ref="command-form">
+          <input name="command" type="text" @change="commandChange" />
         </form>
       </div>
     </main>
