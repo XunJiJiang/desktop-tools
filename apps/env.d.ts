@@ -155,13 +155,5 @@ interface Invoke {
   (
     channel: 'command:fuzzyParse',
     fullCommand: string
-  ): Promise<
-    [
-      string,
-      {
-        command: string
-        comment: string
-      }[]
-    ]
-  >
+  ): Promise<[string, import('@/types/command.d.ts').Comment[]]>
 }

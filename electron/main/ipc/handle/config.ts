@@ -9,6 +9,7 @@ import { singleRun } from '@ele/utils/singleRun'
 
 type Config = import('@/types/settings').Settings
 
+/** 基础配置路径 */
 const defPath = join(resourcesPath(), 'default', 'config.json')
 
 const configPath = join(app.getPath('userData'), 'config', 'config.json')
@@ -29,9 +30,19 @@ const writeDefaultConfig = async () => {
   })
 }
 
-export const updateConfigFile = (
-  setConfig: (config: Config) => Config
-) => {
+const readConfig = async () => {
+  return new Promise<string>((resolve) => {
+    readFile(configPath, 'utf-8', (err, data) => {
+      if (err) {
+        console.error('Error reading config file:', err)
+        resolve('{}')
+      }
+      resolve(data)
+    })
+  })
+}
+
+export const updateConfigFile = (setConfig: (config: Config) => Config) => {
   const _config = setConfig(config)
   return () => {
     return new Promise<void>((resolve, reject) => {
@@ -50,44 +61,58 @@ export const updateConfigFile = (
   }
 }
 
-let config: object
-const useConfig = singleRun((args: { onUpdated: (config: Config) => void }) => {
-  readFile(configPath, 'utf-8', async (err, data) => {
-    if (err) {
-      const _config = await writeDefaultConfig()
-      config = JSON.parse(_config)
+let config: Config
+const useConfig = singleRun(
+  (
+    args: { onUpdated: (config: Config) => void } = {
+      onUpdated: () => {}
     }
-    config = JSON.parse(data)
-  })
+  ) => {
+    readFile(configPath, 'utf-8', async (err, data) => {
+      if (err) {
+        const _config = await writeDefaultConfig()
+        config = JSON.parse(_config)
+      }
+      config = JSON.parse(data)
+    })
 
-  ipcMain.handle('config:update:file', async (_, config) => {
-    const run = updateConfigFile(() => config)
-    return await run()
-  })
+    ipcMain.handle('config:update:file', async (_, config) => {
+      const run = updateConfigFile(() => config)
+      return await run()
+    })
 
-  ipcMain.handle('config:default', async () => {
-    return new Promise<string>(async (resolve) => {
-      readFile(defPath, 'utf-8', (err, data) => {
-        if (err) {
-          console.error('Error reading default config file:', err)
-        }
-        resolve(data)
+    ipcMain.handle('config:default', async () => {
+      return await readConfig()
+    })
+
+    ipcMain.on('config:global:update', async (e, _config: Config) => {
+      config = _config
+      args.onUpdated(config)
+
+      const windows = webContents
+        .getAllWebContents()
+        .filter((w) => w.id !== e.sender.id)
+
+      windows.forEach((w) => {
+        w.send('config:global:update', config)
       })
     })
-  })
 
-  ipcMain.on('config:global:update', async (e, _config: Config) => {
-    config = _config
-    args.onUpdated(config)
-
-    const windows = webContents
-      .getAllWebContents()
-      .filter((w) => w.id !== e.sender.id)
-
-    windows.forEach((w) => {
-      w.send('config:global:update', config)
-    })
-  })
-})
+    return {
+      updateWebviewConfig(setConfig: (config: Config) => Config) {
+        const _config = setConfig(config)
+        const run = updateConfigFile(() => _config)
+        run()
+        const windows = webContents.getAllWebContents()
+        windows.forEach((w) => {
+          w.send('config:global:update', config)
+        })
+      },
+      async getConfig(): Promise<Config> {
+        return config = JSON.parse(await readConfig())
+      }
+    }
+  }
+)
 
 export default useConfig

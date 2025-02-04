@@ -1,11 +1,13 @@
 import { app, BrowserWindow, Menu } from 'electron'
 import { getValue } from '@ele/utils/getValue'
+import useCommand from '@ele/store/modules/command'
 
 const isMac = process.platform === 'darwin'
 
 type Lang = import('@/types/language').Lang
+type Config = import('@/types/settings').Settings
 
-const createMenuTemplate = (lang: Lang) =>
+const createMenuTemplate = (lang: Lang, config: Config) =>
   [
     // macOS 应用程序
     ...((isMac
@@ -189,6 +191,7 @@ const createMenuTemplate = (lang: Lang) =>
         },
         { type: 'separator' },
         {
+          role: 'shareMenu',
           label: getValue(lang, 'title.menu.file.items.share.value', 'Share'),
           submenu: [
             // TODO: 共享子菜单
@@ -196,7 +199,18 @@ const createMenuTemplate = (lang: Lang) =>
         },
         { type: 'separator' },
         {
-          label: getValue(lang, 'title.menu.file.items.autoSave', 'Auto Save')
+          label: getValue(lang, 'title.menu.file.items.autoSave', 'Auto Save'),
+          type: 'checkbox',
+          click: (_, win) => {
+            if (win && win instanceof BrowserWindow) {
+              const { parseAndRun } = useCommand()
+              parseAndRun('> autoSave', {
+                reply: win.webContents.send,
+                sender: win.webContents
+              })
+            }
+          },
+          checked: config.menu?.file?.autoSave ?? false
         },
         { type: 'separator' },
         {
@@ -371,48 +385,69 @@ const createMenuTemplate = (lang: Lang) =>
                 'title.menu.view.items.appearance.items.primarySidebar',
                 'Primary Sidebar'
               ),
-              accelerator: isMac ? 'Cmd+B' : 'Ctrl+B'
+              accelerator: isMac ? 'Cmd+B' : 'Ctrl+B',
+              type: 'checkbox'
             },
+            // checkbox
             {
               label: getValue(
                 lang,
                 'title.menu.view.items.appearance.items.auxiliarySidebar',
                 'Auxiliary Sidebar'
               ),
-              accelerator: isMac ? 'Cmd+Alt+B' : 'Ctrl+Alt+B'
+              accelerator: isMac ? 'Cmd+Alt+B' : 'Ctrl+Alt+B',
+              type: 'checkbox'
             },
+            // checkbox
             {
               label: getValue(
                 lang,
                 'title.menu.view.items.appearance.items.statusBar',
                 'Status Bar'
-              )
+              ),
+              type: 'checkbox'
             },
+            // checkbox
             {
               label: getValue(
                 lang,
                 'title.menu.view.items.appearance.items.panel',
                 'Panel'
               ),
-              accelerator: isMac ? 'Cmd+J' : 'Ctrl+J'
+              accelerator: isMac ? 'Cmd+J' : 'Ctrl+J',
+              type: 'checkbox'
             },
             { type: 'separator' },
+            // checkbox
             {
               label: getValue(
                 lang,
                 'title.menu.view.items.appearance.items.thumbnail',
                 'Thumbnail'
-              )
+              ),
+              type: 'checkbox'
             }
           ]
         },
+        // checkbox
         {
           label: getValue(
             lang,
             'title.menu.view.items.autoLineBreak',
             'Auto Line Break'
           ),
-          accelerator: 'Alt+Z'
+          accelerator: 'Alt+Z',
+          type: 'checkbox',
+          click: (_, win) => {
+            if (win && win instanceof BrowserWindow) {
+              const { parseAndRun } = useCommand()
+              parseAndRun('> autoLineBreak', {
+                reply: win.webContents.send,
+                sender: win.webContents
+              })
+            }
+          },
+          checked: config.menu?.view?.autoLineBreak ?? false
         }
       ]
     },
@@ -649,15 +684,15 @@ const createMenuTemplate = (lang: Lang) =>
 /**
  * 创建应用程序菜单
  */
-export const createAppMenu = (lang: Lang) =>
-  Menu.buildFromTemplate(createMenuTemplate(lang))
+export const createAppMenu = (lang: Lang, config: Config) =>
+  Menu.buildFromTemplate(createMenuTemplate(lang, config))
 
 /**
  * 创建应用程序菜单(基于createMenuTemplate, 排除函数属性)
  * 用于非 macOS 创建应用程序菜单
  */
-export const createWinMenu = (lang: Lang) => {
-  const menu = createMenuTemplate(lang)
+export const createWinMenu = (lang: Lang, config: Config) => {
+  const menu = createMenuTemplate(lang, config)
   function filterFunc(
     menu: Electron.MenuItemConstructorOptions[]
   ): Electron.MenuItemConstructorOptions[] {

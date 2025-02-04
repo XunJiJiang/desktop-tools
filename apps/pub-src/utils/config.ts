@@ -100,7 +100,9 @@ const loadConfig = async <T>(
       )
     )
   } else {
-    const defaultConfig = isGlobal ? JSON.parse(await ipc.invoke('config:default')) : {}
+    const defaultConfig = isGlobal
+      ? JSON.parse(await ipc.invoke('config:default'))
+      : {}
     await ipc.invoke('fs:mkdir', appConfigPath, {
       recursive: true
     })
@@ -135,6 +137,7 @@ const loadConfig = async <T>(
       (a, b) => b[0].split('.').length - a[0].split('.').length
     )) {
       const cv = getValue(v, key)
+      // set 包含当前路径, 说明当前路径的子路径存在变化, 直接触发回调
       if (set.has(key)) {
         callbacks.forEach((callback) => {
           callback(cv)
@@ -142,8 +145,10 @@ const loadConfig = async <T>(
         continue
       }
       if (hasChange(cv, getValue(ov, key))) {
+        // 当前路径的值发生变化
         map.set(key, cv)
         const pathArray = resolvePath(key)
+        // 将当前路径的全部父路径加入 set
         for (let i = 0; i < pathArray.length; i++) {
           set.add(pathArray.slice(0, i + 1).join('.'))
         }

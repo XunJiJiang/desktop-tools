@@ -9,8 +9,12 @@
 // 4. 内部指令, 由内部注册, 不使用指令解析器, 直接触发
 //    触发内部功能, 例如: 菜单项
 
-import { ipcMain, type IpcMainEvent } from 'electron'
+import { ipcMain, type IpcMainInvokeEvent, type WebContents } from 'electron'
 import { singleRun } from '@ele/utils/singleRun'
+import { getValue } from '@ele/utils/getValue'
+import useI18n from '@ele/ipc/handle/i18n'
+import useConfig from '@ele/ipc/handle/config'
+import useMenu from '@ele/ipc/handle/menu'
 
 export const COMMAND_TYPE: Record<string, string> = {
   FILE: 'file',
@@ -31,25 +35,38 @@ export interface CommandNode {
   tokens: string[]
 }
 
+type Comment = import('@/types/command.d.ts').Comment
+
 type CommandCallbackEvent = {
-  reply: IpcMainEvent['reply']
-  getTitle: IpcMainEvent['sender']['getTitle']
-  focus: IpcMainEvent['sender']['focus']
-  isFocused: IpcMainEvent['sender']['isFocused']
-  send: IpcMainEvent['sender']['send']
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  reply: (channel: string, ...args: any[]) => void
+  getTitle: WebContents['getTitle']
+  focus: WebContents['focus']
+  isFocused: WebContents['isFocused']
+  send: WebContents['send']
+}
+
+type CommandEvent = {
+  reply: CommandCallbackEvent['reply']
+  sender: WebContents
 }
 
 type CommandCallback = (event: CommandCallbackEvent, node: CommandNode) => void
+type FuzzyCommandCallback = (
+  event: CommandCallbackEvent,
+  node: CommandNode
+) => Comment[] | Promise<Comment[]>
 
 /**
  * [command]: [callback, comment]
  */
-type CommandCallbacks = Record<
-  string | typeof BASE_CALLBACK,
-  [CommandCallback, string]
->
+type CommandCallbacks = Record<string, [CommandCallback, string]> & {
+  [BASE_CALLBACK]: [CommandCallback, string]
+  [FUZZY_CALLBACK]: [FuzzyCommandCallback, string]
+}
 
 const BASE_CALLBACK: symbol = Symbol('base callback')
+const FUZZY_CALLBACK: symbol = Symbol('fuzzy callback')
 
 /**
  * 指令类型和对应的标识, 例如: GLOBAL(>)
@@ -78,6 +95,7 @@ const sortMarkList = () => {
  * @param type 指令类型 COMMAND_TYPE[key] -> type
  * @param mark 指令标识 [mark] command
  * @param callback 基础指令回调 当没有对应的 command 时触发
+ * @param fuzzyCallback 模糊指令回调 当没有对应的 command 时触发
  * @param cover 是否允许覆盖已有的指令
  */
 const createCommandRegister = (
@@ -85,6 +103,7 @@ const createCommandRegister = (
   type: string,
   mark: string,
   callback: CommandCallback = () => {},
+  fuzzyCallback: FuzzyCommandCallback = () => [],
   {
     cover = false
   }: {
@@ -101,7 +120,8 @@ const createCommandRegister = (
   }
   COMMAND_TYPE[key] = type
   const callbacks: CommandCallbacks = {
-    [BASE_CALLBACK]: [callback, '']
+    [BASE_CALLBACK]: [callback, ''],
+    [FUZZY_CALLBACK]: [fuzzyCallback, '']
   }
   COMMAND_MARK.set(mark, [type, callbacks])
   TYPE_MARK.set(type, mark)
@@ -113,13 +133,18 @@ const createCommandRegister = (
      * 添加指令
      * @param command 指令
      * @param callback 指令回调
+     * @param comment 指令注释 或 注释的 i18n key
      */
-    addCommand(command: string, callback: CommandCallback, comment: string) {
+    add(command: string, callback: CommandCallback, comment: string) {
       if (!cover && COMMAND_MARK.has(command)) {
         console.warn(`指令标识 ${command} 重复注册`)
         return
       }
       callbacks[command] = [callback, comment]
+      return this
+    },
+    remove(command: string) {
+      delete callbacks[command]
       return this
     }
   }
@@ -127,51 +152,80 @@ const createCommandRegister = (
 
 /** 初始化 > 和 % 标识指令 */
 const initCommandRegister = () => {
+  const { updateMenu } = useMenu()
   const global = createCommandRegister(
     'GLOBAL',
-    COMMAND_TYPE.GLOBAL,
+    'global',
     '>',
     (_, node) => {
       console.warn('GLOBAL command', node)
     },
+    () => [],
     {
       cover: false
     }
   )
-    ?.addCommand(
+    ?.add(
       'test',
       (win, node) => {
         console.log('GLOBAL test', node)
       },
       'test'
     )
-    ?.addCommand(
+    ?.add(
       't',
       (win, node) => {
         console.log('GLOBAL text', node)
       },
       't'
     )
-  const workspaceText = createCommandRegister(
+    ?.add(
+      'autoSave',
+      () => {
+        const { updateWebviewConfig } = useConfig()
+        updateWebviewConfig((config) => {
+          const oldSaveConfig = config.menu?.file?.autoSave ?? false
+          const newSaveConfig = !oldSaveConfig
+          config.menu = config.menu ?? {}
+          config.menu.file = config.menu.file ?? {}
+          config.menu.file.autoSave = newSaveConfig
+          return config
+        })
+        updateMenu()
+      },
+      'title.menu.file.items.autoSave'
+    )
+    ?.add(
+      'autoLineBreak',
+      () => {
+        const { updateWebviewConfig } = useConfig()
+        updateWebviewConfig((config) => {
+          const oldLineBreakConfig = config.menu?.view?.autoLineBreak ?? false
+          const newLineBreakConfig = !oldLineBreakConfig
+          config.menu = config.menu ?? {}
+          config.menu.view = config.menu.view ?? {}
+          config.menu.view.autoLineBreak = newLineBreakConfig
+          return config
+        })
+        updateMenu()
+      },
+      'title.menu.view.items.autoLineBreak'
+    )
+
+  createCommandRegister(
     'WORKSPACE_TEXT',
-    COMMAND_TYPE.WORKSPACE_TEXT,
+    'workspace text',
     '%',
     (_, node) => {
       console.warn('WORKSPACE_TEXT command', node)
     },
+    async () => [],
     {
       cover: false
     }
-  )?.addCommand(
-    'test',
-    (win, node) => {
-      console.log('WORKSPACE_TEXT test', node)
-    },
-    'test'
   )
   return {
-    global,
-    workspaceText
+    global
   }
 }
 
@@ -183,7 +237,8 @@ const parseCommand = (fullCommand: string): [CommandNode, CommandCallback] => {
   // 用户输入的 标识和第一个token 有空格时
   if (COMMAND_MARK.has(command)) {
     const [type, callback] = COMMAND_MARK.get(command) ?? []
-    if (type && callback)
+    console.log('command', type, callback)
+    if (type && callback) {
       return [
         {
           type,
@@ -193,6 +248,7 @@ const parseCommand = (fullCommand: string): [CommandNode, CommandCallback] => {
         },
         callback[command2][0] ?? callback[BASE_CALLBACK][0]
       ]
+    }
   }
 
   // 用户输入的 标识和第一个token 没有空格时
@@ -232,7 +288,7 @@ const parseCommand = (fullCommand: string): [CommandNode, CommandCallback] => {
 const run = (
   commandNode: CommandNode,
   callback: CommandCallback,
-  event: IpcMainEvent
+  event: CommandEvent
 ) => {
   const commandEvent: CommandCallbackEvent = {
     reply: event.reply,
@@ -245,62 +301,137 @@ const run = (
 }
 
 /** 解析运行指令 */
-const parseAndRun = (command: string, event: IpcMainEvent) => {
+const parseAndRun = (command: string, event: CommandEvent) => {
   const [commandNode, callback] = parseCommand(command)
   run(commandNode, callback, event)
 }
 
 /** 模糊解析指令(获取对应mark的语法上的commands, 而不检测是否存在, mark需要存在) */
-const fuzzyParseCommand = (
-  fullCommand: string
-): [
-  string,
-  {
-    command: string
-    comment: string
-  }[]
-] => {
+const fuzzyParseCommand = async (
+  fullCommand: string,
+  event: IpcMainInvokeEvent
+): Promise<[string, Comment[]]> => {
   const [command, command2] = fullCommand
     .split(' ')
     .filter((item) => item !== '')
   if (COMMAND_MARK.has(command)) {
-    const [, callbacks] = COMMAND_MARK.get(command) ?? [, {}]
+    const [, callbacks] = COMMAND_MARK.get(command)!
+
+    const getFuzzyComments = callbacks[
+      FUZZY_CALLBACK
+    ][0] as FuzzyCommandCallback
+    const comments = await getFuzzyComments(
+      {
+        reply: event.sender.send,
+        getTitle: event.sender.getTitle,
+        focus: event.sender.focus,
+        isFocused: event.sender.isFocused,
+        send: event.sender.send
+      },
+      {
+        type: COMMAND_TYPE.GLOBAL,
+        mark: command,
+        command: command2,
+        tokens: []
+      }
+    )
+    if (comments.length > 0) return [command, comments]
+
     const possibleCommands = Object.keys(callbacks).filter(
       (key: string | symbol) =>
         typeof key === 'string' && key.includes(command2)
     )
-    if (possibleCommands.length === 0) {
-      possibleCommands.push(...Object.keys(callbacks))
+    // 仅当指令为空时, 返回所有指令
+    // 如果指令不为空, 且没有找到指令, 则返回空数组
+    if (possibleCommands.length === 0 && !command2) {
+      possibleCommands.push(
+        ...Object.keys(callbacks).filter(
+          (key: string | symbol) => typeof key === 'string'
+        )
+      )
     }
     return [
       command,
-      possibleCommands.map((key) => ({
-        command: key,
-        comment: callbacks[key as keyof typeof callbacks][1]
-      }))
+      possibleCommands.map((key) => {
+        const lang = useI18n().getLanguage()
+        const comment = callbacks[key as keyof typeof callbacks][1]
+        if (lang) {
+          return {
+            command: key,
+            comment: getValue(lang, comment, comment)
+          }
+        } else {
+          return {
+            command: key,
+            comment
+          }
+        }
+      })
     ]
   }
   const mark = Array.from(MARK_LIST).find((item) => command?.startsWith(item))
   if (mark && COMMAND_MARK.has(mark)) {
-    const [, callbacks] = COMMAND_MARK.get(mark) ?? [, {}]
+    const [, callbacks] = COMMAND_MARK.get(mark)!
+
+    const getFuzzyComments = callbacks[
+      FUZZY_CALLBACK
+    ][0] as FuzzyCommandCallback
+    const comments = await getFuzzyComments(
+      {
+        reply: () => {},
+        getTitle: event.sender.getTitle,
+        focus: event.sender.focus,
+        isFocused: event.sender.isFocused,
+        send: event.sender.send
+      },
+      {
+        type: COMMAND_TYPE.GLOBAL,
+        mark: command,
+        command: command2,
+        tokens: []
+      }
+    )
+    if (comments.length > 0) return [command, comments]
+
     const possibleCommands = Object.keys(callbacks).filter(
       (key: string | symbol) =>
         typeof key === 'string' && key.includes(command.slice(mark.length))
     )
-    if (possibleCommands.length === 0) {
-      possibleCommands.push(...Object.keys(callbacks))
-    }
     return [
       mark,
-      possibleCommands.map((key) => ({
-        command: key,
-        comment: callbacks[key as keyof typeof callbacks][1]
-      }))
+      possibleCommands.map((key) => {
+        const lang = useI18n().getLanguage()
+        const comment = callbacks[key as keyof typeof callbacks][1]
+        if (lang) {
+          return {
+            command: key,
+            comment: getValue(lang, comment, comment)
+          }
+        } else {
+          return {
+            command: key,
+            comment
+          }
+        }
+      })
     ]
   }
 
+  // TODO: 针对%指令, 需要查找工作区文本并返回
   // TODO: 认为是文件指令, 此处查找工作区文件, 返回相对路径
-  return ['file', []]
+  return [
+    'file',
+    [
+      {
+        command: 'file',
+        comment: 'file'
+      },
+      {
+        command: 'file2',
+        comment: 'file2'
+      }
+    ]
+  ]
 }
 
 const useCommand = singleRun(() => {
@@ -310,8 +441,8 @@ const useCommand = singleRun(() => {
     parseAndRun(command, event)
   })
 
-  ipcMain.handle('command:fuzzyParse', (_, command: string) => {
-    return fuzzyParseCommand(command)
+  ipcMain.handle('command:fuzzyParse', (event, command: string) => {
+    return fuzzyParseCommand(command, event)
   })
 
   return {

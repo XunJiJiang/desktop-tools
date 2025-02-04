@@ -8,4 +8,17 @@ export interface Settings {
   workspace?: {
     path?: string
   }
+  menu?: {
+    file?: {
+      autoSave?: boolean
+    }
+    view?: {
+      primarySidebar?: boolean
+      auxiliarySidebar?: boolean
+      statusBar?: boolean
+      panel?: boolean
+      thumbnail?: boolean
+      autoLineBreak?: boolean
+    }
+  }
 }

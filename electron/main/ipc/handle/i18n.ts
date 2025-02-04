@@ -52,26 +52,51 @@ const getLanguage = async (lang: string) => {
   })
 }
 
-const useI18n = singleRun((callback: (lang: Lang) => void) => {
-  let local = ''
+interface GetLanguage {
+  (sync: false): Promise<Lang>
+  (sync?: true): Lang | null
+}
 
-  ipcMain.handle('i18n:available', async () => {
-    return (await getAdditionalLanguagesList()).push(...supportList)
-  })
+const useI18n = singleRun(
+  (
+    callback: (lang: Lang) => void = () => {}
+  ): {
+    onLanguageUpdated: (language?: string) => void
+    getLanguage: GetLanguage
+  } => {
+    let local = ''
+    let lang: Lang | null = null
 
-  ipcMain.handle('i18n:load', async (_, lang: string) => {
-    return await getLanguage(lang)
-  })
+    ipcMain.handle('i18n:available', async () => {
+      return (await getAdditionalLanguagesList()).push(...supportList)
+    })
 
-  return {
-    onLanguageUpdated: (language?: string) => {
-      if (!language) return
-      local = language
-      getLanguage(local).then((lang) => {
-        callback(lang)
-      })
+    ipcMain.handle('i18n:load', async (_, local: string) => {
+      return (lang = await getLanguage(local))
+    })
+
+    return {
+      onLanguageUpdated: (language?: string) => {
+        if (!language) return
+        local = language
+        getLanguage(local).then((_lang) => {
+          callback(_lang)
+          lang = _lang
+        })
+      },
+      getLanguage: ((sync = true) => {
+        if (sync) {
+          return lang
+        } else {
+          return new Promise<Lang>((resolve) => {
+            getLanguage(local).then((lang) => {
+              resolve(lang)
+            })
+          })
+        }
+      }) as GetLanguage
     }
   }
-})
+)
 
 export default useI18n
