@@ -96,7 +96,7 @@ const sortMarkList = () => {
  * @param mark 指令标识 [mark] command
  * @param callback 基础指令回调 当没有对应的 command 时触发
  * @param fuzzyCallback 模糊指令回调 当没有对应的 command 时触发
- * @param cover 是否允许覆盖已有的指令
+ * @param opt.cover 是否覆盖已存在的指令
  */
 const createCommandRegister = (
   key: string,
@@ -136,16 +136,31 @@ const createCommandRegister = (
      * @param comment 指令注释 或 注释的 i18n key
      */
     add(command: string, callback: CommandCallback, comment: string) {
-      if (!cover && COMMAND_MARK.has(command)) {
+      if (!cover && callbacks[command]) {
         console.warn(`指令标识 ${command} 重复注册`)
-        return
+        return () => {
+          console.warn(`对应标识 ${command} 的指令注册失败, 无法删除`)
+        }
       }
+      let hasDelete = false
       callbacks[command] = [callback, comment]
-      return this
-    },
-    remove(command: string) {
-      delete callbacks[command]
-      return this
+      /**
+       * 删除指令
+       * 对于不允许覆盖的指令, 仅删除一次
+       * 对于允许覆盖的指令, 每次删除, 即使已经被其他次调用的add覆盖
+       */
+      return () => {
+        if (cover) {
+          if (callbacks[command]) {
+            delete callbacks[command]
+          }
+        } else {
+          if (!hasDelete && callbacks[command]) {
+            hasDelete = true
+            delete callbacks[command]
+          }
+        }
+      }
     }
   }
 }
@@ -165,52 +180,52 @@ const initCommandRegister = () => {
       cover: false
     }
   )
-    ?.add(
-      'test',
-      (win, node) => {
-        console.log('GLOBAL test', node)
-      },
-      'test'
-    )
-    ?.add(
-      't',
-      (win, node) => {
-        console.log('GLOBAL text', node)
-      },
-      't'
-    )
-    ?.add(
-      'autoSave',
-      () => {
-        const { updateWebviewConfig } = useConfig()
-        updateWebviewConfig((config) => {
-          const oldSaveConfig = config.menu?.file?.autoSave ?? false
-          const newSaveConfig = !oldSaveConfig
-          config.menu = config.menu ?? {}
-          config.menu.file = config.menu.file ?? {}
-          config.menu.file.autoSave = newSaveConfig
-          return config
-        })
-        updateMenu()
-      },
-      'title.menu.file.items.autoSave'
-    )
-    ?.add(
-      'autoLineBreak',
-      () => {
-        const { updateWebviewConfig } = useConfig()
-        updateWebviewConfig((config) => {
-          const oldLineBreakConfig = config.menu?.view?.autoLineBreak ?? false
-          const newLineBreakConfig = !oldLineBreakConfig
-          config.menu = config.menu ?? {}
-          config.menu.view = config.menu.view ?? {}
-          config.menu.view.autoLineBreak = newLineBreakConfig
-          return config
-        })
-        updateMenu()
-      },
-      'title.menu.view.items.autoLineBreak'
-    )
+  global?.add(
+    'test',
+    (win, node) => {
+      console.log('GLOBAL test', node)
+    },
+    'test'
+  )
+  global?.add(
+    't',
+    (win, node) => {
+      console.log('GLOBAL text', node)
+    },
+    't'
+  )
+  global?.add(
+    'autoSave',
+    () => {
+      const { updateWebviewConfig } = useConfig()
+      updateWebviewConfig((config) => {
+        const oldSaveConfig = config.menu?.file?.autoSave ?? false
+        const newSaveConfig = !oldSaveConfig
+        config.menu = config.menu ?? {}
+        config.menu.file = config.menu.file ?? {}
+        config.menu.file.autoSave = newSaveConfig
+        return config
+      })
+      updateMenu()
+    },
+    'title.menu.file.items.autoSave'
+  )
+  global?.add(
+    'autoLineBreak',
+    () => {
+      const { updateWebviewConfig } = useConfig()
+      updateWebviewConfig((config) => {
+        const oldLineBreakConfig = config.menu?.view?.autoLineBreak ?? false
+        const newLineBreakConfig = !oldLineBreakConfig
+        config.menu = config.menu ?? {}
+        config.menu.view = config.menu.view ?? {}
+        config.menu.view.autoLineBreak = newLineBreakConfig
+        return config
+      })
+      updateMenu()
+    },
+    'title.menu.view.items.autoLineBreak'
+  )
 
   createCommandRegister(
     'WORKSPACE_TEXT',

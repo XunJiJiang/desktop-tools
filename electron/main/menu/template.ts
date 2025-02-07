@@ -193,9 +193,7 @@ const createMenuTemplate = (lang: Lang, config: Config) =>
         {
           role: 'shareMenu',
           label: getValue(lang, 'title.menu.file.items.share.value', 'Share'),
-          submenu: [
-            // TODO: 共享子菜单
-          ]
+          submenu: []
         },
         { type: 'separator' },
         {
