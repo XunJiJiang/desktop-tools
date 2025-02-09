@@ -19,9 +19,7 @@ const cssVar = useCssVar()
 const workspace = useWorkspace()
 
 const color = computed(() => {
-  return isFocused
-    ? cssVar.vars['base-font-color-1']
-    : cssVar.vars['base-font-color-2']
+  return isFocused ? cssVar.vars['base-font-1'] : cssVar.vars['base-font-2']
 })
 
 const actionBarConfig = reactive<WorkspaceConfig['title-bar']['action-bar']>({
@@ -67,7 +65,7 @@ const switchPanel = (panel: 'left-panel' | 'layout-panel' | 'right-panel') => {
   <div class="action-bar">
     <ul>
       <li>
-        <a @click="switchPanel('left-panel')">
+        <a v-tooltip="['left', 'bottom']" @click="switchPanel('left-panel')">
           <IconFont
             :name="
               actionBarConfig['left-panel'].show
@@ -80,7 +78,10 @@ const switchPanel = (panel: 'left-panel' | 'layout-panel' | 'right-panel') => {
         </a>
       </li>
       <li>
-        <a @click="switchPanel('layout-panel')">
+        <a
+          v-tooltip="['bottom', 'bottom']"
+          @click="switchPanel('layout-panel')"
+        >
           <IconFont
             :name="
               actionBarConfig['layout-panel'].show
@@ -93,7 +94,7 @@ const switchPanel = (panel: 'left-panel' | 'layout-panel' | 'right-panel') => {
         </a>
       </li>
       <li>
-        <a @click="switchPanel('right-panel')">
+        <a v-tooltip="['right', 'bottom']" @click="switchPanel('right-panel')">
           <IconFont
             :name="
               actionBarConfig['right-panel'].show

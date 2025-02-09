@@ -118,7 +118,7 @@ div {
   justify-content: center;
 
   font-size: 13px;
-  color: var(--base-font-color-2, $base-font-color-2);
+  color: var(--base-font-2, $base-font-2);
 
   border-bottom: 1px solid #49494947;
   background-color: transparent;
@@ -126,8 +126,8 @@ div {
   app-region: drag;
 
   &.focused {
-    background-color: var(--title-bar-bg-color, $title-bar-bg-color);
-    color: var(--base-font-color-1, $base-font-color-1);
+    background-color: var(--title-bar-bg, $title-bar-bg);
+    color: var(--base-font-1, $base-font-1);
   }
 
   &.show-action {

@@ -1,6 +1,8 @@
+import type { App } from "vue"
+import tooltip from "./modules/tooltip"
 
-const useDirective = (app: App) => {
-
+const directive = (app: App) => {
+  app.directive("tooltip", tooltip)
 }
 
-export default useDirective
+export default directive

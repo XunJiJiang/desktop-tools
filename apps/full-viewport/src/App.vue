@@ -56,9 +56,6 @@ const alphaRef = shallowRef(0)
 config.then((c) => {
   alphaRef.value = isMac ? 0 : c.value['bg-transparency'] || 255
 })
-setTimeout(() => {
-  console.log(alphaRef.value)
-}, 1000)
 watch(alphaRef, (v) => {
   const _v = isMac ? 0 : v
   config.then((c) => {
@@ -88,11 +85,19 @@ const commandChange = async (e: Event) => {
         <form id="form" @submit="submitFile">
           <button type="submit">选择账单</button>
         </form>
-        <button @click="createWindow('full-viewport')">打开新的完整窗口</button>
-        <button @click="createWindow('main-viewport-only')">
+        <button
+          v-tooltip="['左', 'left']"
+          @click="createWindow('full-viewport')"
+        >
+          打开新的完整窗口
+        </button>
+        <button
+          v-tooltip="['right', 'right']"
+          @click="createWindow('main-viewport-only')"
+        >
           打开新的主窗口
         </button>
-        <select @change="changeLanguage">
+        <select v-tooltip="['LeetCode', 'top']" @change="changeLanguage">
           <option
             v-for="[lang, key] in languages"
             :key="key"
@@ -102,7 +107,14 @@ const commandChange = async (e: Event) => {
             {{ key }}
           </option>
         </select>
-        <input type="range" min="0" max="255" step="1" v-model="alphaRef" />
+        <input
+          v-tooltip="['bottom', 'bottom']"
+          type="range"
+          min="0"
+          max="255"
+          step="1"
+          v-model="alphaRef"
+        />
         <form id="command-form" @submit="commandSubmit" ref="command-form">
           <input name="command" type="text" @change="commandChange" />
         </form>

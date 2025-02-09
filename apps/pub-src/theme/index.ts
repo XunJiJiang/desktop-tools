@@ -136,7 +136,7 @@ export const loadTheme = async (name: string, space: string) => {
         }
         const alpha = checkTransparency(transparency)
         for (const [key, value] of Object.entries(theme)) {
-          if (key.endsWith('tr-bg-color')) {
+          if (key.endsWith('tr-bg')) {
             document.documentElement.style.setProperty(
               `--${key}`,
               value + alpha
@@ -148,7 +148,7 @@ export const loadTheme = async (name: string, space: string) => {
       ;(await config).on('bg-transparency', setBgTransparency)
 
       for (const [key, value] of Object.entries(theme)) {
-        if (key.endsWith('tr-bg-color')) {
+        if (key.endsWith('tr-bg')) {
           document.documentElement.style.setProperty(`--${key}`, value + alpha)
           cssVar.setCssVar(key, value + alpha)
         } else {

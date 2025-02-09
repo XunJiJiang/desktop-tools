@@ -5,11 +5,14 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import { initThemes } from '@apps/theme'
 import { pinia } from '@apps/store'
+import directive from '@apps/directive'
+
 // import router from './router'
 
 const app = createApp(App)
 
 app.use(pinia)
+app.use(directive)
 // app.use(router)
 initThemes()
 

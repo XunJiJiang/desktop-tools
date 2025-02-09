@@ -4,7 +4,7 @@
 html,
 body {
   margin: 0;
-  background-color: var(--body-tr-bg-color, $body-tr-bg-color);
+  background-color: var(--body-tr-bg, $body-tr-bg);
   overflow: hidden;
 }
 

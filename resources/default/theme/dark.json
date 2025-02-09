@@ -1,7 +1,11 @@
 {
-  "body-tr-bg-color": "#2f2f2f",
-  "title-bar-bg-color": "#2f2f2fc0",
-  "base-font-color-0": "#fff",
-  "base-font-color-1": "#cecece",
-  "base-font-color-2": "#979797"
+  "body-tr-bg": "#2f2f2f",
+  "title-bar-bg": "#2f2f2fc0",
+  "base-font-0": "#fff",
+  "base-font-1": "#cecece",
+  "base-font-2": "#979797",
+  "tooltip-bg": "#2f2f2f",
+  "tooltip-arrow-bg": "#2f2f2f",
+  "tooltip-border": "#6e6e6e",
+  "tooltip-font": "#fff"
 }

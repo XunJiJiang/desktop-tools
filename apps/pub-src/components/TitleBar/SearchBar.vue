@@ -22,9 +22,7 @@ const { isFocused } = defineProps({
 const cssVar = useCssVar()
 
 const color = computed(() => {
-  return isFocused
-    ? cssVar.vars['base-font-color-1']
-    : cssVar.vars['base-font-color-2']
+  return isFocused ? cssVar.vars['base-font-1'] : cssVar.vars['base-font-2']
 })
 const click = () => {
   console.log('click')
@@ -34,6 +32,7 @@ const click = () => {
 <template>
   <div
     @click="click"
+    v-tooltip="[title, 'bottom']"
     :class="{
       'search-bar': true,
       focused: isFocused,
