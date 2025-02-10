@@ -6,18 +6,17 @@ import { invoke } from '@apps/utils/ipc'
 const getBrowserLocale = (): string => {
   const navigatorLocale = navigator.language || navigator.languages[0]
   if (!navigatorLocale) {
-    return 'en'
+    return 'en-US'
   }
-  const trimmedLocale = navigatorLocale.trim().split(/-|_/)[0]
-  switch (trimmedLocale) {
-    case 'ja':
-      return 'ja'
-    case 'zh':
-      return 'zh'
-    case 'zh-Hant':
-      return 'tw'
+  switch (navigatorLocale) {
+    case 'ja-JP':
+      return 'ja-JP'
+    case 'zh-CN':
+      return 'zh-CN'
+    case 'zh-TW':
+      return 'zh-TW'
     default:
-      return 'en'
+      return 'en-US'
   }
 }
 
@@ -30,12 +29,12 @@ const loadLocaleMessages = async (locale: string) => {
 const i18n = createI18n({
   legacy: false,
   locale: getBrowserLocale(),
-  fallbackLocale: 'en'
+  fallbackLocale: 'en-US',
 })
 
 loadLocaleMessages(i18n.global.locale.value)
 
-loadLocaleMessages('en')
+loadLocaleMessages('en-US')
 
 config.then((c) => {
   if (c.value.language) i18n.global.locale.value = c.value.language

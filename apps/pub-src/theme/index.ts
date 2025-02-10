@@ -30,8 +30,8 @@ export const getThemesName = async (reload = false) => {
 
   const themeDirPath = await ipc.invoke(
     'path:join',
-    await ipc.invoke('path:get', 'appData'),
-    'theme'
+    await ipc.invoke('path:get', 'userData'),
+    'themes'
   )
 
   themesName = []
@@ -83,8 +83,8 @@ export const loadTheme = async (name: string, space: string) => {
 
   const themeDirPath = await ipc.invoke(
     'path:join',
-    await ipc.invoke('path:get', 'appData'),
-    'theme'
+    await ipc.invoke('path:get', 'userData'),
+    'themes'
   )
 
   const fullPath = await ipc.invoke(
@@ -111,14 +111,14 @@ export const loadTheme = async (name: string, space: string) => {
               ? JSON.parse(
                   await ipc.invoke('fs:resources', [
                     'default',
-                    'theme',
+                    'themes',
                     'light.json'
                   ])
                 )
               : JSON.parse(
                   await ipc.invoke('fs:resources', [
                     'default',
-                    'theme',
+                    'themes',
                     'dark.json'
                   ])
                 )
@@ -223,8 +223,8 @@ const hasTheme = async (name: string, space: string, fullPath: string) => {
 export const reloadDefaultThemes = async () => {
   const themeDirPath = await ipc.invoke(
     'path:join',
-    await ipc.invoke('path:get', 'appData'),
-    'theme'
+    await ipc.invoke('path:get', 'userData'),
+    'themes'
   )
 
   await ipc.invoke(
@@ -238,7 +238,7 @@ export const reloadDefaultThemes = async () => {
   try {
     for (const name of defaultThemesName) {
       const theme = JSON.parse(
-        await ipc.invoke('fs:resources', ['default', 'theme', name + '.json'])
+        await ipc.invoke('fs:resources', ['default', 'themes', name + '.json'])
       )
 
       await ipc.invoke(
@@ -268,8 +268,8 @@ export const reloadDefaultThemes = async () => {
 const loadDefaultTheme = async (name: string, fullPath: string) => {
   const themeDirPath = await ipc.invoke(
     'path:join',
-    await ipc.invoke('path:get', 'appData'),
-    'theme'
+    await ipc.invoke('path:get', 'userData'),
+    'themes'
   )
 
   await ipc.invoke(
@@ -283,7 +283,7 @@ const loadDefaultTheme = async (name: string, fullPath: string) => {
   try {
     const resourcePath = await ipc.invoke('fs:resources', [
       'default',
-      'theme',
+      'themes',
       name + '.json'
     ])
     const theme = JSON.parse(

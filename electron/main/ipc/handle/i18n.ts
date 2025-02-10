@@ -6,9 +6,12 @@ import { singleRun } from '@ele/utils/singleRun'
 
 const defLanguagesPath = join(resourcesPath(), 'languages')
 
-const additionalLanguagesPath = join(app.getPath('appData'), 'languages')
+const additionalLanguagesPath = join(app.getPath('userData'), 'languages')
 
-const supportList = ['zh', 'en', 'tw', 'ja']
+console.log('defLanguagesPath:', defLanguagesPath)
+console.log('additionalLanguagesPath:', additionalLanguagesPath)
+
+const supportList = ['zh-CN', 'en-US', 'zh-TW', 'ja-JP']
 
 const getAdditionalLanguagesList = async () => {
   return new Promise<string[]>((resolve) => {
@@ -44,6 +47,7 @@ const getLanguage = async (lang: string) => {
         (err, data) => {
           if (err) {
             console.error('Error reading additional language file:', err)
+            resolve({} as Lang)
           }
           resolve(JSON.parse(data))
         }

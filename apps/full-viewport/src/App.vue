@@ -30,10 +30,10 @@ const createWindow = async (label: string) => {
   console.log(res)
 }
 const languages = [
-  ['en', 'English'],
-  ['zh', '简体中文'],
-  ['tw', '繁體中文'],
-  ['ja', '日本語']
+  ['en-US', 'English'],
+  ['zh-CN', '简体中文'],
+  ['zh-TW', '繁體中文'],
+  ['ja-JP', '日本語']
 ] as const
 const changeLanguage = (event: Event) => {
   i18n.global.locale.value = (event.target as HTMLSelectElement)
