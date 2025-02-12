@@ -9,7 +9,9 @@
     "playwright.config.*",
     "eslint.config.*",
     "vite/**/*",
-    "electron/**/*"
+    "electron/**/*",
+    "utils",
+    "types"
   ],
   "compilerOptions": {
     "composite": true,

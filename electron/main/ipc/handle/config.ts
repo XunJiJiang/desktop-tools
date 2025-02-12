@@ -5,7 +5,7 @@ import { resourcesPath } from '@ele/utils/resourcesPath'
 import { app, ipcMain, webContents } from 'electron'
 import { readFile, writeFile } from 'node:fs'
 import { join } from 'node:path'
-import { singleRun } from '@ele/utils/singleRun'
+import { singleRun } from '@/utils/singleRun'
 
 type Config = import('@/types/settings').Settings
 
@@ -109,7 +109,7 @@ const useConfig = singleRun(
         })
       },
       async getConfig(): Promise<Config> {
-        return config = JSON.parse(await readConfig())
+        return (config = JSON.parse(await readConfig()))
       }
     }
   }

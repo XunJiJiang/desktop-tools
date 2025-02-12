@@ -63,7 +63,7 @@ watch(alphaRef, (v) => {
   })
 })
 const commandForm = useTemplateRef<HTMLFormElement>('command-form')
-const commandSubmit = (e: SubmitEvent) => {
+const commandSubmit = (e: Event) => {
   e.preventDefault()
   if (!commandForm.value) return
   const command = new FormData(commandForm.value).get('command') as string
@@ -125,7 +125,6 @@ const commandChange = async (e: Event) => {
 
 <style lang="scss" scoped>
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;

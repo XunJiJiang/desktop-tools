@@ -46,7 +46,7 @@ onUnmounted(() => {
   })
 })
 
-const isFocused = shallowRef(false)
+const isFocused = shallowRef(true)
 
 const unListenFns = Promise.all([
   ipc.on('window:blur', () => {

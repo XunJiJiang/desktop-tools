@@ -3,7 +3,7 @@ import { resourcesPath } from '@ele/utils/resourcesPath'
 import { ipcMain } from 'electron'
 import fs from 'node:fs'
 import { join } from 'node:path'
-import { singleRun } from '@ele/utils/singleRun'
+import { singleRun } from '@/utils/singleRun'
 
 const useFs = singleRun(() => {
   ipcMain.handle('fs:exists', async (_, path: fs.PathLike) => {

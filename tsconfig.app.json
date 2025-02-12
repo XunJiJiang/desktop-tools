@@ -32,5 +32,5 @@
       "@comp/*": ["apps/pub-src/components/*"]
     }
   },
-  "include": ["apps/**/*", "apps/env.d.ts"]
+  "include": ["apps/**/*", "apps/env.d.ts", "utils", "types"]
 }

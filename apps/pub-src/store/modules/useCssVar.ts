@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { shallowReactive } from 'vue'
 
-export const useCssVar = defineStore('cssVar', () => {
+export const useCssVar = defineStore('css-var', () => {
   const vars = shallowReactive<Record<string, string>>({})
 
   const setCssVars = (newVars: Record<string, string>) => {

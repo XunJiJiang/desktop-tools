@@ -10,7 +10,7 @@
 //    触发内部功能, 例如: 菜单项
 
 import { ipcMain, type IpcMainInvokeEvent, type WebContents } from 'electron'
-import { singleRun } from '@ele/utils/singleRun'
+import { singleRun } from '@/utils/singleRun'
 import { getValue } from '@ele/utils/getValue'
 import useI18n from '@ele/ipc/handle/i18n'
 import useConfig from '@ele/ipc/handle/config'

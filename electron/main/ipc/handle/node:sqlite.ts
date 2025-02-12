@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { readFile } from 'node:fs'
 import sq from 'node:sqlite'
 import { resourcesPath } from '@ele/utils/resourcesPath'
-import { singleRun } from '@ele/utils/singleRun'
+import { singleRun } from '@/utils/singleRun'
 // import sq from 'sqlite3'
 
 const accountBookCreateSql = new Promise<string>((resolve) => {

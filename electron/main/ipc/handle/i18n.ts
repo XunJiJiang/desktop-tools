@@ -2,7 +2,7 @@ import { resourcesPath } from '@ele/utils/resourcesPath'
 import { app, ipcMain } from 'electron'
 import { mkdir, readdir, readFile } from 'node:fs'
 import { join, parse } from 'node:path'
-import { singleRun } from '@ele/utils/singleRun'
+import { singleRun } from '@/utils/singleRun'
 
 const defLanguagesPath = join(resourcesPath(), 'languages')
 

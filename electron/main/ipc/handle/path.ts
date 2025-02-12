@@ -1,8 +1,8 @@
 import { app, ipcMain } from 'electron'
 import { join } from 'node:path'
-import { singleRun } from '@ele/utils/singleRun'
+import { singleRun } from '@/utils/singleRun'
 
-export type PathName = import('@/types/path').PathName;
+export type PathName = import('@/types/path').PathName
 
 const usePath = singleRun(() => {
   ipcMain.handle('path:get', async (_, name: PathName, paths?: string[]) => {

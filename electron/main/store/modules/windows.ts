@@ -1,5 +1,5 @@
 import { BrowserWindow } from 'electron'
-import { singleRun } from '@ele/utils/singleRun'
+import { singleRun } from '@/utils/singleRun'
 
 /** Map<[完整窗口], Set<[仅主窗口]>> */
 const wins: Map<BrowserWindow, Set<BrowserWindow>> = new Map()

@@ -5,7 +5,7 @@ import { readFile } from 'node:fs'
 // import sq from 'node:sqlite'
 import SqDatabase from 'better-sqlite3'
 import { resourcesPath } from '@ele/utils/resourcesPath'
-import { singleRun } from '@ele/utils/singleRun'
+import { singleRun } from '@/utils/singleRun'
 
 const accountBookCreateSql = new Promise<string>((resolve) => {
   readFile(
