@@ -167,7 +167,7 @@ const createCommandRegister = (
 
 /** 初始化 > 和 % 标识指令 */
 const initCommandRegister = () => {
-  const { updateMenu } = useMenu()
+  const { updateAppMenu: updateMenu } = useMenu()
   const global = createCommandRegister(
     'GLOBAL',
     'global',

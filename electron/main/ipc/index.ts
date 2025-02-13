@@ -13,7 +13,7 @@ const useHandle = () => {
   useFs()
   useSqlite()
   useWindow()
-  const { updateMenu } = useMenu()
+  const { updateAppMenu: updateMenu } = useMenu()
   const { onLanguageUpdated } = i18n((lang) => {
     createMenu(lang)
     updateMenu(lang)

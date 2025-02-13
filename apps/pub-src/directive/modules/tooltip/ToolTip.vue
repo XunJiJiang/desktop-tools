@@ -16,18 +16,36 @@ const ARROW_SIZE = 5.65685425
 <script lang="ts" setup>
 import { computed } from 'vue'
 import { getStringWidth } from '@apps/utils/getStringWidth'
+import { useStyle } from '@apps/style'
+const style = useStyle()
 
 const { message, position = 'top', target } = defineProps<TooltipProps>()
 const contentWidth = computed(
   () =>
     getStringWidth(message, {
-      fontSize: 12
+      fontSize: 12,
+      fontFamily: style.get('font-family')
     }) +
     ARROW_SIZE * 2 +
     2 /* border */ +
     2
 )
 const contentWidthPx = computed(() => contentWidth.value + 'px')
+/** content 在 x 轴方向的偏移值, 防止超出左右窗口边界 */
+const contentOffsetPx = computed(() => {
+  if (position === 'left' || position === 'right') {
+    return '0px'
+  }
+  const MARGIN = 3
+  const offset = target.x + target.width / 2 - contentWidth.value / 2
+  if (offset < 0) {
+    return -offset + MARGIN + 'px'
+  } else if (offset + contentWidth.value > window.innerWidth) {
+    return window.innerWidth - offset - contentWidth.value - MARGIN + 'px'
+  } else {
+    return '0px'
+  }
+})
 const arrowPosition = computed(() => {
   switch (position) {
     case 'top':
@@ -117,7 +135,7 @@ const containerLeft = computed(() => containerPosition.value[0] + 'px')
     position: absolute;
     top: 0;
     left: 0;
-    transform: translate(-50%, -50%);
+    transform: translate(calc(-50% + v-bind(contentOffsetPx)), -50%);
     background: var(--tooltip-bg, $tooltip-bg);
     backdrop-filter: blur(10px);
     border: 1px solid var(--tooltip-border, $tooltip-border);

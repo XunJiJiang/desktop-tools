@@ -18,9 +18,9 @@ const useMenu = singleRun(() => {
 
   return {
     /** 持久化菜单(用于windows等系统上的前端菜单显示), 向前端发送菜单变动事件 */
-    updateMenu: async (_lang?: Lang) => {
+    updateAppMenu: async (_lang?: Lang) => {
       const lang = _lang ?? (await useI18n().getLanguage(false))
-      // INFO: 此处禁止使用 updateWebviewConfig 方法
+      // INFO: 此处禁止使用 useConfig().updateWebviewConfig 方法
       // updateWebviewConfig 内触发了 updateMenu
       const { getConfig } = useConfig()
       menu = createWinMenu(lang, await getConfig())

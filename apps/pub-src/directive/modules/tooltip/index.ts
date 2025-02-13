@@ -4,7 +4,7 @@
  * 没有过渡动画
  */
 
-// TODO: 边缘定位优化
+// TODO: left 和 right 横向边缘定位优化, top 和 bottom 纵向边缘定位优化
 
 import { createVNode, render, type Directive } from 'vue'
 import { useMountElement } from '@apps/hooks/useMountElement'
