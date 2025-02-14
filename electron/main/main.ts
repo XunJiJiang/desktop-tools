@@ -30,11 +30,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   ? path.join(process.env.APP_ROOT, 'public')
   : RENDERER_DIST
 
-const {
-  wins,
-  fullWinWorkspaces,
-  workspaceFullWins
-} = useWindowStore()
+const { wins, fullWinWorkspaces, workspaceFullWins } = useWindowStore()
 
 ipcMain.handle('workspace:hasOpened', (_, path: string) => {
   return workspaceFullWins.has(path)
@@ -63,15 +59,21 @@ function createWindow(
 ) {
   const win = new BrowserWindow({
     titleBarStyle: 'hidden',
-    titleBarOverlay: {
-      height: 34
-    },
+    ...(process.platform !== 'darwin'
+      ? {
+          titleBarOverlay: {
+            height: 34,
+            color: '#ffffffff',
+            symbolColor: '#fff'
+          }
+        }
+      : {}),
+    trafficLightPosition: { x: 9, y: 9 },
     width: 1024,
     height: 768,
     minWidth: 400,
     minHeight: 270,
     backgroundColor: '#00000000',
-    transparent: true,
     icon: path.join(process.env.VITE_PUBLIC, 'vite.svg'),
     webPreferences: {
       preload: path.join(MAIN_DIST, 'preload.mjs')

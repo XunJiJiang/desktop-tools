@@ -42,7 +42,7 @@ const menuHandler = (item: MenuItem) => {
   >
     <ul>
       <!-- TODO: 此处, 需要响应式, 宽度不足时隐藏部分 -->
-      <li v-for="item in menu.filter((_, i) => i !== 0)" :key="item.label">
+      <li v-for="item in menu" :key="item.label">
         <MenuButton :item="item" :ready-to-focus="true" @click="menuHandler" />
       </li>
     </ul>
