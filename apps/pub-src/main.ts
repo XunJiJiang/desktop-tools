@@ -7,16 +7,15 @@ import { useStyle } from '@apps/style'
 // import router from './router'
 
 export const createApp: typeof createVueApp = (App) => {
-  useStyle({})
-
   const app = createVueApp(App)
   app.use(i18n)
   app.use(pinia)
   app.use(directive)
   // app.use(router)
-  initThemes()
-
   app.mount('#app')
+
+  useStyle({})
+  initThemes()
 
   return app
 }
