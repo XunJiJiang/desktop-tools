@@ -1,9 +1,10 @@
 <script lang="ts">
-import { onUnmounted, ref, shallowRef } from 'vue'
+import { onMounted, onUnmounted, ref, shallowRef, useTemplateRef } from 'vue'
 import config from '@apps/utils/config'
 import logo from '@apps/assets/img/logo.svg'
 import ipc from '@apps/utils/ipc'
 import { isWindows } from '@apps/utils/userAgent'
+import { windowEvent } from '@apps/utils/windowEvent'
 </script>
 
 <script lang="ts" setup>
@@ -20,6 +21,8 @@ defineProps({
     required: true
   }
 })
+const startRef = useTemplateRef<HTMLDivElement>('start-ref')
+
 const titleBarStyle = ref<'macos' | 'windows' | ''>('')
 const switchTitleBarStyle = (style: 'macos' | 'windows') => {
   titleBarStyle.value = style
@@ -48,14 +51,30 @@ onUnmounted(() => {
 
 const isFocused = shallowRef(true)
 
-const unListenFns = Promise.all([
-  ipc.on('window:blur', () => {
-    isFocused.value = false
-  }),
-  ipc.on('window:focus', () => {
-    isFocused.value = true
-  })
-])
+const maxMenuWidth = ref(0)
+const updateMaxMenuWidth = () => {
+  const startElement = startRef.value
+  if (startElement) {
+    const rect = startElement.getBoundingClientRect()
+    maxMenuWidth.value = rect.left + rect.width - 34
+  }
+}
+
+let unListenFns: Promise<[Ipc.UnListen, Ipc.UnListen, () => void]>
+onMounted(() => {
+  unListenFns = Promise.all([
+    ipc.on('window:blur', () => {
+      isFocused.value = false
+    }),
+    ipc.on('window:focus', () => {
+      isFocused.value = true
+    }),
+    windowEvent('resize', () => {
+      updateMaxMenuWidth()
+    })
+  ])
+  updateMaxMenuWidth()
+})
 onUnmounted(() => {
   unListenFns.then((fns) => fns.forEach((fn) => fn()))
 })
@@ -71,14 +90,19 @@ onUnmounted(() => {
       windows: titleBarStyle === 'windows'
     }"
   >
-    <div class="start">
+    <div ref="start-ref" class="start">
       <div class="logo" v-if="titleBarStyle === 'windows'">
         <img :src="logo" class="logo" alt="logo" />
       </div>
 
       <div v-if="titleBarStyle === 'macos'" class="macos-control"></div>
 
-      <MenuBar v-if="showMenu" :titleBarStyle :isFocused />
+      <MenuBar
+        v-if="showMenu"
+        :titleBarStyle
+        :isFocused
+        :max-width="maxMenuWidth"
+      />
 
       <!-- <div class="placeholder"></div> -->
     </div>

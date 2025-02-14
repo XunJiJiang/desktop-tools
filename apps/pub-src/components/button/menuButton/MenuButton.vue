@@ -7,23 +7,23 @@ export type MenuItem = {
     | 'submenu'
     | 'checkbox'
     | 'radio'
-    | 'thumbnails'
-    | 'all thumbnails'
+    | 'remaining'
+    | 'all remaining'
+  submenu?: MenuItem[]
 }
 export type MenuButtonProps = {
   item: MenuItem
   /** 仅当上次鼠标聚焦在menu的任意项时, 处理鼠标hover */
   readyToFocus: boolean
 }
+export type MountEvent = {
+  width: number
+  height: number
+  item: MenuItem
+}
 export type MenuButtonEvents = {
   click: [item: MenuItem]
-  onMounted: [
-    event: {
-      width: number
-      height: number,
-      item: MenuItem
-    }
-  ]
+  onMounted: [event: MountEvent]
 }
 </script>
 
@@ -45,12 +45,12 @@ onMounted(() => {
   emit('onMounted', { width, height, item })
 })
 const isIcon = computed(
-  () => item.type === 'thumbnails' || item.type === 'all thumbnails'
+  () => item.type === 'remaining' || item.type === 'all remaining'
 )
 const iconName = computed(() => {
-  if (item.type === 'thumbnails') {
+  if (item.type === 'remaining') {
     return 'ellipsis'
-  } else if (item.type === 'all thumbnails') {
+  } else if (item.type === 'all remaining') {
     return 'menu'
   }
   return ''

@@ -7,14 +7,12 @@ type InsertParam = import('@/types/sqlite').InsertParam
 type UpdateParam = import('@/types/sqlite').UpdateParam
 type DeleteParam = import('@/types/sqlite').DeleteParam
 
-type UnListen = () => void
-
 declare interface Window {
   ipcRenderer
 }
 
 declare const ipcRenderer: {
-  on: (...args: any[]) => UnListen
+  on: (...args: any[]) => Ipc.UnListen
   off: (...args: any[]) => void
   send: (...args: any[]) => void
   invoke: (...args: any[]) => Promise<any>
@@ -22,11 +20,12 @@ declare const ipcRenderer: {
 }
 
 declare namespace Ipc {
-  export type on = Listener<UnListen>
+  export type on = Listener<Ipc.UnListen>
   export type off = Listener<void>
   export type send = Send
   export type invoke = Invoke
   export type getPathForFile = (file: File) => string
+  export type UnListen = () => void
 }
 
 type EasyMenu = {
@@ -49,12 +48,12 @@ interface Listener<UnListen = void> {
       event: IpcRendererEvent,
       config: import('@/types/settings').Settings
     ) => void
-  ): UnListen
+  ): Ipc.UnListen
 
   (
     channel: 'menu:update',
     listener: (event: IpcRendererEvent, menu: any) => void
-  ): UnListen
+  ): Ipc.UnListen
 }
 
 interface Send {
