@@ -36,7 +36,7 @@ export const autoRerun = <T>(
   return result
 }
 
-export const autoRerunSync = async <T>(
+export const autoRerunAsync = async <T>(
   callback: () => Promise<T>,
   unexpected: T[],
   times: number = 3,

@@ -1,10 +1,13 @@
 import { shallowReactive } from 'vue'
 import { singleRun } from '@/utils/singleRun'
 
-
 const handle = {
   get: (target: Record<string, string>, key: string) => {
-    return target[key] ?? 'inherit'
+    if (target[key] === undefined) {
+      target[key] = 'inherit'
+      return target[key]
+    }
+    return target[key]
   },
   set: (target: Record<string, string>, key: string, value: string) => {
     target[key] = value

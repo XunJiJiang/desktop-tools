@@ -1,6 +1,20 @@
 import { defineStore } from 'pinia'
 import { shallowReactive } from 'vue'
 
+const handle = {
+  get: (target: Record<string, string>, key: string) => {
+    if (target[key] === undefined) {
+      target[key] = 'inherit'
+      return target[key]
+    }
+    return target[key]
+  },
+  set: (target: Record<string, string>, key: string, value: string) => {
+    target[key] = value
+    return true
+  }
+}
+
 export const useCssVar = defineStore('css-var', () => {
   const vars = shallowReactive<Record<string, string>>({})
 
@@ -17,6 +31,6 @@ export const useCssVar = defineStore('css-var', () => {
   return {
     setCssVars,
     setCssVar,
-    vars
+    vars: new Proxy(vars, handle)
   }
 })
