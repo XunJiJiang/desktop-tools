@@ -45,6 +45,20 @@ const menuHandler = (item: MenuItem) => {
       <li v-for="item in menu" :key="item.label">
         <MenuButton :item="item" :ready-to-focus="true" @click="menuHandler" />
       </li>
+      <li>
+        <MenuButton
+          :item="{ label: '未完全展示项', type: 'thumbnails' }"
+          :ready-to-focus="true"
+          @click="menuHandler"
+        />
+      </li>
+      <li>
+        <MenuButton
+          :item="{ label: '全部菜单项', type: 'all thumbnails' }"
+          :ready-to-focus="true"
+          @click="menuHandler"
+        />
+      </li>
     </ul>
   </div>
 </template>
@@ -52,7 +66,7 @@ const menuHandler = (item: MenuItem) => {
 <style scoped lang="scss">
 .menu-bar {
   // TODO: 没有内容, 宽度未确定
-  flex: 1;
+  flex: 0;
 
   & > ul {
     display: flex;

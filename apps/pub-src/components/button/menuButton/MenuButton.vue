@@ -1,6 +1,14 @@
 <script lang="ts">
 export type MenuItem = {
   label: string
+  type?:
+    | 'normal'
+    | 'separator'
+    | 'submenu'
+    | 'checkbox'
+    | 'radio'
+    | 'thumbnails'
+    | 'all thumbnails'
 }
 export type MenuButtonProps = {
   item: MenuItem
@@ -9,25 +17,61 @@ export type MenuButtonProps = {
 }
 export type MenuButtonEvents = {
   click: [item: MenuItem]
+  onMounted: [
+    event: {
+      width: number
+      height: number,
+      item: MenuItem
+    }
+  ]
 }
 </script>
 
 <script lang="ts" setup>
+import { computed, onMounted, useTemplateRef } from 'vue'
+import Icon from '@comp/IconFont/IconFont.vue'
+import { useCssVar } from '@apps/store/modules/useCssVar'
+
 const { item, readyToFocus } = defineProps<MenuButtonProps>()
 const emit = defineEmits<MenuButtonEvents>()
+const cssVar = useCssVar()
 const clickHandler = () => {
   emit('click', item)
 }
+const menuBarRef = useTemplateRef<HTMLDivElement>('menu-bar-ref')
+onMounted(() => {
+  if (!menuBarRef.value) return
+  const { width, height } = menuBarRef.value?.getBoundingClientRect()
+  emit('onMounted', { width, height, item })
+})
+const isIcon = computed(
+  () => item.type === 'thumbnails' || item.type === 'all thumbnails'
+)
+const iconName = computed(() => {
+  if (item.type === 'thumbnails') {
+    return 'ellipsis'
+  } else if (item.type === 'all thumbnails') {
+    return 'menu'
+  }
+  return ''
+})
+const iconColor = computed(() => cssVar.vars['menu-btn-font'])
 </script>
 
 <template>
   <div
+    ref="menu-bar-ref"
     :class="{
       'menu-btn': true,
       'ready-to-focus': readyToFocus
     }"
   >
-    <button @click="clickHandler">{{ item.label }}</button>
+    <button v-if="isIcon" @click="clickHandler">
+      <Icon :name="iconName" :size="16" :color="iconColor" />
+    </button>
+    <button v-else @click="clickHandler">
+      {{ item.label }}
+    </button>
   </div>
 </template>
 

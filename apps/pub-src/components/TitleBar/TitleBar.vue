@@ -168,14 +168,48 @@ div {
         }
       }
     }
-  }
 
-  &.macos.show-action {
-    & > div {
-      @media screen and (max-width: 670px) {
-        &.end {
+    &.show-action {
+      & > div {
+        @media screen and (max-width: 1000px) {
           flex: 1;
         }
+        @media screen and (max-width: 670px) {
+          &.end {
+            flex: 1;
+          }
+        }
+      }
+    }
+  }
+
+  &.windows {
+    &.show-action {
+      justify-content: flex-end;
+
+      & > div {
+        &.start {
+          @media screen and (max-width: 1000px) {
+            flex: 1;
+          }
+        }
+
+        &.center {
+          @media screen and (max-width: 1000px) {
+            flex: 1 0 222px;
+            max-width: 320px;
+          }
+
+          @media screen and (max-width: 520px) {
+            flex: 0 0 calc(100% - 298px);
+          }
+        }
+      }
+    }
+
+    & > div {
+      .center {
+        flex: 1;
       }
     }
   }
