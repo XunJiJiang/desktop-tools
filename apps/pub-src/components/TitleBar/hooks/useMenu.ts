@@ -9,6 +9,7 @@ import {
   onUnmounted,
   reactive,
   ref,
+  nextTick,
   type ComputedRef
 } from 'vue'
 
@@ -21,9 +22,18 @@ export const useMenu = (maxWidth: ComputedRef<number>) => {
   const remainingSubmenu = ref<MenuItem[]>([])
   const allRemainingSubmenu = ref<MenuItem[]>([])
   const buttonWidthMap = reactive(new Map<string, number>())
+  const hasMenuUpdate = ref(false)
   const menu = computed(() => {
     showRemaining.value = false
     showAllRemaining.value = false
+
+    if (hasMenuUpdate.value) {
+      nextTick(() => {
+        hasMenuUpdate.value = false
+      })
+      return []
+    }
+
     if (maxWidth.value && buttonWidthMap.size !== allMenu.value.length) {
       if (remainingWidth.value === 0) {
         showRemaining.value = true
@@ -88,6 +98,7 @@ export const useMenu = (maxWidth: ComputedRef<number>) => {
       console.log(_menu)
       allMenu.value = _menu
       buttonWidthMap.clear()
+      hasMenuUpdate.value = true
     })
   })
   onUnmounted(() => {

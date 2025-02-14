@@ -11,7 +11,10 @@
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc && vite build && electron-builder",
+    "build": "vue-tsc && vite build && electron-builder --mac --win --linux",
+    "build:mac": "vue-tsc && vite build && electron-builder --mac",
+    "build:win": "vue-tsc && vite build && electron-builder --win",
+    "build:linux": "vue-tsc && vite build && electron-builder --linux",
     "preview": "vite preview"
   },
   "dependencies": {
