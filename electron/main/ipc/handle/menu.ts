@@ -1,6 +1,6 @@
 import { createWinMenu } from '@ele/menu/template'
 import useWindowStore from '@ele/store/modules/windows'
-import { ipcMain } from 'electron'
+import { ipcMain, Menu } from 'electron'
 import { singleRun } from '@/utils/singleRun'
 import useConfig from './config'
 import useI18n from '@ele/ipc/handle/i18n'
@@ -14,6 +14,31 @@ const useMenu = singleRun(() => {
 
   ipcMain.handle('menu:get', () => {
     return menu ?? []
+  })
+
+  // TODO
+  ipcMain.on('menu:context', () => {
+    const testMenu = Menu.buildFromTemplate([
+      {
+        label: 'Test',
+        submenu: [
+          {
+            label: 'Item 1',
+            click: () => {
+              console.log('Item 1 clicked')
+            }
+          },
+          {
+            label: 'Item 2',
+            click: () => {
+              console.log('Item 2 clicked')
+            }
+          }
+        ]
+      }
+    ])
+
+    testMenu.popup()
   })
 
   return {

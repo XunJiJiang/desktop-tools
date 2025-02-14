@@ -63,6 +63,8 @@ interface Send {
   (channel: 'workspace:change', path: string): void
 
   (channel: 'command:parseAndRun', fullCommand: string): void
+
+  (channel: 'menu:context'): void
 }
 
 type PathLike = string | Buffer<ArrayBufferLike> | URL
