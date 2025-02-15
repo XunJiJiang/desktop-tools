@@ -124,6 +124,6 @@ $overlap: 3px;
 }
 
 .ready-to-focus:active::before {
-  border: 1px solid var(--menu-btn-hover-border, $menu-btn-hover-border);
+  border: 1px solid var(--menu-btn-active-border, $menu-btn-active-border);
 }
 </style>

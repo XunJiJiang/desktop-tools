@@ -92,6 +92,17 @@ function createWindow(
     }
   })
 
+  // TODO: 测试能不能监听右键事件
+  // 在 Windows 上, 右键可拖拽区域会弹出系统菜单
+  // 通过 hookWindowMessage(278) 拦截右键事件, 防止弹出系统菜单
+  win.hookWindowMessage?.(278, () => {
+    win.setEnabled(false) //窗口禁用
+    setTimeout(() => {
+      win.setEnabled(true) //窗口启用
+    }, 100)
+    return true
+  })
+
   if (!isMainViewportOnly) {
     // 对完整视口窗口
     wins.set(win, new Set())

@@ -10,5 +10,5 @@
   "tooltip-font": "#fff",
   "menu-btn-hover-bg": "#99999966",
   "menu-btn-font": "#fff",
-  "menu-btn-hover-border": "#fff"
+  "menu-btn-active-border": "#7a7a7a"
 }
