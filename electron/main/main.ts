@@ -65,21 +65,31 @@ function createWindow(
             height: 34,
             color: '#fff0',
             symbolColor: '#fff'
-          }
+          },
+          // transparent: true,
+          // backgroundColor: '#24242400'
+          // 窗口透明会导致失去圆角, 但vscode等应用可以实现透明窗口且保持圆角
+          backgroundColor: '#242424'
+          // backgroundMaterial: 'acrylic' // Windows 11 窗口亚克力效果
+          // 窗口在最大化时失去效果的问题: 变黑并失去圆角
+          // 这个问题在以下 pr 中提及并缓解, 但我认为这个问题还是存在(v34.2.0)
+          // https://github.com/electron/electron/pull/45456
+          // 一个有效的解决方案是不使用原生控件, 在自定义控件的最大化时, 使用win.setBounds()来模拟最大化
+          // 但会丢失原生窗口的一些特性, 如窗口拖动区域最大化, 窗口最大化时的动画效果
         }
-      : {}),
+      : {
+          backgroundColor: '#24242400',
+          vibrancy: 'fullscreen-ui' // MacOS 窗口明亮效果
+        }),
     trafficLightPosition: { x: 9, y: 9 },
     width: 1024,
     height: 768,
     minWidth: 400,
     minHeight: 270,
-    backgroundColor: '#00000000',
     icon: path.join(process.env.VITE_PUBLIC, 'vite.svg'),
     webPreferences: {
       preload: path.join(MAIN_DIST, 'preload.mjs')
-    },
-    vibrancy: 'fullscreen-ui', // on MacOS
-    backgroundMaterial: 'acrylic' // on Windows 11
+    }
   })
 
   if (!isMainViewportOnly) {

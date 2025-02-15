@@ -7,5 +7,8 @@
   "tooltip-bg": "#2f2f2f",
   "tooltip-arrow-bg": "#2f2f2f",
   "tooltip-border": "#6e6e6e",
-  "tooltip-font": "#fff"
+  "tooltip-font": "#fff",
+  "menu-btn-hover-bg": "#99999966",
+  "menu-btn-font": "#fff",
+  "menu-btn-hover-border": "#fff"
 }
