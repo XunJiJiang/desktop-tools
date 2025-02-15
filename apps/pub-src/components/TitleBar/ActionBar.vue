@@ -130,7 +130,7 @@ const switchPanel = (panel: 'left-panel' | 'layout-panel' | 'right-panel') => {
       height: 24px;
       border-radius: 5px;
 
-      app-region: no-drag;
+      -webkit-app-region: no-drag;
 
       cursor: pointer;
 

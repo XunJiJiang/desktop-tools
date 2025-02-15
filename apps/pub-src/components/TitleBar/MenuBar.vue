@@ -95,7 +95,7 @@ const {
 
     font-size: 13px;
 
-    app-region: no-drag;
+    -webkit-app-region: no-drag;
 
     list-style: none;
     padding: 0;

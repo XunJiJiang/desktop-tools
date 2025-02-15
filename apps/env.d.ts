@@ -64,6 +64,15 @@ interface Send {
   (channel: 'command:parseAndRun', fullCommand: string): void
 
   (channel: 'menu:context'): void
+
+  (
+    channel: 'app-region:drag',
+    position: {
+      x: number
+      y: number
+    }
+  ): void
+  (channel: 'app-region:drop'): void
 }
 
 type PathLike = string | Buffer<ArrayBufferLike> | URL

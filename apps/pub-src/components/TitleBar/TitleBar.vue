@@ -147,7 +147,7 @@ div {
   border-bottom: 1px solid #49494947;
   background-color: transparent;
 
-  app-region: drag;
+  -webkit-app-region: drag;
 
   &.focused {
     background-color: var(--title-bar-bg, $title-bar-bg);

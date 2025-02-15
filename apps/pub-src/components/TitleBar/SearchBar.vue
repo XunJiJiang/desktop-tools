@@ -73,7 +73,7 @@ $search-bar-max-width: 600px;
 
   cursor: pointer;
 
-  app-region: no-drag;
+  -webkit-app-region: no-drag;
 
   @media screen and (max-width: 520px) {
     flex: 0 0 calc(100% - 10px);
