@@ -22,7 +22,9 @@ export const useStyle = singleRun((base: Record<string, string> = {}) => {
     set: (name: string, value: string) => {
       style[name] = value
     },
-    get: (name: string) => style[name] ?? 'inherit',
+    get: (name: string) => {
+      return handle.get(style, name)
+    },
     style: new Proxy(style, handle)
   }
 })

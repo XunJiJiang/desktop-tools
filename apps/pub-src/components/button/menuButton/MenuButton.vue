@@ -28,6 +28,7 @@ export type MenuButtonEvents = {
 </script>
 
 <script lang="ts" setup>
+import { useStyle } from '@apps/style'
 import { computed, onMounted, useTemplateRef } from 'vue'
 import Icon from '@comp/IconFont/IconFont.vue'
 import { useCssVar } from '@apps/store/modules/useCssVar'
@@ -35,6 +36,8 @@ import { useCssVar } from '@apps/store/modules/useCssVar'
 const { item, readyToFocus } = defineProps<MenuButtonProps>()
 const emit = defineEmits<MenuButtonEvents>()
 const cssVar = useCssVar()
+const style = useStyle()
+const fontFamily = computed(() => style.style['font-family'])
 const clickHandler = () => {
   emit('click', item)
 }
@@ -90,6 +93,7 @@ $overlap: 3px;
     color: var(--menu-btn-font, $menu-btn-font);
     cursor: pointer;
     font-size: 12px;
+    font-family: v-bind(fontFamily);
     height: 32px;
     line-height: 32px;
     padding: 0 10px;

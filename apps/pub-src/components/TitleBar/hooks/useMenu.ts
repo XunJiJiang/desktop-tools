@@ -27,6 +27,8 @@ export const useMenu = (maxWidth: ComputedRef<number>) => {
     showRemaining.value = false
     showAllRemaining.value = false
 
+    // 如果有菜单更新, 则直接返回空数组, 以清空旧的渲染
+    // 并在下一个 tick 中将 hasMenuUpdate 置为 false, 以运行全部菜单的宽度重计算
     if (hasMenuUpdate.value) {
       nextTick(() => {
         hasMenuUpdate.value = false
@@ -35,6 +37,8 @@ export const useMenu = (maxWidth: ComputedRef<number>) => {
     }
 
     if (maxWidth.value && buttonWidthMap.size !== allMenu.value.length) {
+      // 通过 hasMenuUpdate 确保清空旧的渲染, 因此此次渲染覆盖全部菜单
+      // 返回全部菜单, 使全部 MenuButton 都渲染, 以获取宽度
       if (remainingWidth.value === 0) {
         showRemaining.value = true
       }
@@ -43,6 +47,8 @@ export const useMenu = (maxWidth: ComputedRef<number>) => {
       }
       return allMenu.value
     } else if (allMenu.value.length >= 3) {
+      // 此时 buttonWidthMap.size === allMenu.value.length, 全部菜单的宽度已经获取
+      // 计算最大宽度下可以显示的菜单
       const _menu: MenuItem[] = []
       let _width = 0
       for (let i = 0; i < 3; ++i) {
@@ -83,6 +89,11 @@ export const useMenu = (maxWidth: ComputedRef<number>) => {
         return []
       }
     } else {
+      // 通常情况下 allMenu.value.length >= 3, 此处为特殊情况
+      // 且此处仅作为保底方案, 不会出现在正常情况下
+      console.warn(
+        '[警告]apps/pub-src/components/TitleBar/hooks/useMenu.ts: allMenu.value.length < 3'
+      )
       if (remainingWidth.value === 0) {
         showRemaining.value = true
       }
