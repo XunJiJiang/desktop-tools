@@ -20,12 +20,14 @@ const {
   focusStyle?: boolean
   loading?: boolean
 }>()
-type Emit = (e: Event) => boolean | void
+type Emit<E extends Event = Event> = (e: E) => boolean | void
 const emit = defineEmits({
   change: (() => true) as Emit,
   input: (() => true) as Emit,
-  blur: (() => true) as Emit,
-  focus: (() => true) as Emit
+  blur: (() => true) as Emit<FocusEvent>,
+  focus: (() => true) as Emit<FocusEvent>,
+  keydown: (() => true) as Emit<KeyboardEvent>,
+  keyup: (() => true) as Emit<KeyboardEvent>
 })
 const vModel = defineModel()
 const loadingValue = computed(() => (loading ? value + '...' : value))
@@ -73,6 +75,8 @@ defineExpose({
     @input="emit('input', $event)"
     @blur="emit('blur', $event)"
     @focus="emit('focus', $event)"
+    @keydown="emit('keydown', $event)"
+    @keyup="emit('keyup', $event)"
     v-model="_vModel"
   />
 </template>

@@ -1,10 +1,24 @@
+import { BrowserWindow } from 'electron'
 import type { CommandCallback, FuzzyCommandCallback } from './types'
 
 export const language: CommandCallback = async (win, node) => {
   win.reply('language:change', node.tokens[0])
 }
 
-const other: CommandCallback = async () => {}
+const other: CommandCallback = async (win, node) => {
+  if (node.command === 'search') {
+    if (node.tokens[0] === 'open') {
+      win.reply('search:load', {
+        value: ''
+      })
+    }
+  } else if (node.command === 'toggleDevTools') {
+    if (node.tokens[0] === 'switch') {
+      const focusWin = BrowserWindow.getFocusedWindow()
+      focusWin?.webContents.toggleDevTools()
+    }
+  }
+}
 
 export const command: CommandCallback = (win, node) => {
   switch (node.command) {

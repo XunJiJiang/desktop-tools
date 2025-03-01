@@ -221,11 +221,11 @@ const run = (
   event: CommandEvent
 ) => {
   const commandEvent: CommandCallbackEvent = {
-    reply: event.reply,
+    reply: (event.reply ?? event.sender.send).bind(event.sender),
     getTitle: event.sender.getTitle,
     focus: event.sender.focus,
     isFocused: event.sender.isFocused,
-    send: event.sender.send
+    send: event.sender.send.bind(event.sender)
   }
   callback(commandEvent, commandNode)
 }
@@ -252,11 +252,11 @@ const fuzzyParseCommand = async (
     ][0] as FuzzyCommandCallback
     const comments = await getFuzzyComments(
       {
-        reply: event.sender.send,
+        reply: event.sender.send.bind(event.sender),
         getTitle: event.sender.getTitle,
         focus: event.sender.focus,
         isFocused: event.sender.isFocused,
-        send: event.sender.send
+        send: event.sender.send.bind(event.sender)
       },
       {
         type: COMMAND_TYPE.GLOBAL,

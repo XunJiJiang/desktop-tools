@@ -28,6 +28,7 @@ type CommandItem = {
 
 const emit = defineEmits<{
   submit: [command: string | null, info: CommandItem['info'] | null]
+  close: []
 }>()
 
 const itemsFromFrontend = ref<CommandItem[]>([])
@@ -56,6 +57,7 @@ const commandSubmit = (e: Event) => {
   commandForm.value?.reset()
   value.value = ''
   emit('submit', command, null)
+  emit('close')
 }
 
 const commandChange = debounce(async (e: Event) => {
@@ -69,6 +71,18 @@ const commandChange = debounce(async (e: Event) => {
     }
   })
 }, 500)
+
+const inputESC = (e: KeyboardEvent) => {
+  if (
+    e.key === 'Escape' &&
+    !e.ctrlKey &&
+    !e.shiftKey &&
+    !e.altKey &&
+    !e.metaKey
+  ) {
+    emit('close')
+  }
+}
 
 const commandInputRef = useTemplateRef<HTMLInputElement>('command-input-ref')
 
@@ -100,6 +114,7 @@ watch(value, () => {
             type="text"
             v-model="value"
             @input="commandChange"
+            @keydown="inputESC"
           />
         </form>
       </div>

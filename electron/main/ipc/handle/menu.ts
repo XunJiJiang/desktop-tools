@@ -1,13 +1,57 @@
 import { createWinMenu } from '@ele/menu/template'
 import useWindowStore from '@ele/store/modules/windows'
-import { ipcMain, Menu } from 'electron'
+import { BrowserWindow, ipcMain, Menu } from 'electron'
 import { singleRun } from '@/utils/singleRun'
-import useConfig from './config'
 import useI18n from '@ele/ipc/handle/i18n'
+import useCommand from '@ele/store/modules/command'
+import useConfig from './config'
 
 type Lang = import('@/types/language').Lang
 
 const { wins } = useWindowStore()
+
+export type MenuItem = {
+  label: string
+  type?:
+    | 'normal'
+    | 'separator'
+    | 'submenu'
+    | 'checkbox'
+    | 'radio'
+    | 'remaining'
+    | 'all remaining'
+  submenu?: MenuItem[]
+  command?: string
+}
+
+const createMenuPopup = (items: MenuItem[]) => {
+  function deepMenu(
+    _menus: MenuItem[]
+  ): Parameters<typeof Menu.buildFromTemplate>[0] {
+    return _menus.map((item) => {
+      const _command = item.command
+      return {
+        ...item,
+        click: (_, win) => {
+          if (
+            _command &&
+            win &&
+            win instanceof BrowserWindow &&
+            win.webContents.getURL().includes('full-viewport')
+          ) {
+            const command = useCommand()
+            command.parseAndRun(_command, {
+              reply: win.webContents.send.bind(win.webContents),
+              sender: win.webContents
+            })
+          }
+        }
+      } as Electron.MenuItemConstructorOptions
+    })
+  }
+
+  Menu.buildFromTemplate(deepMenu(items)).popup()
+}
 
 const useMenu = singleRun(() => {
   let menu: Electron.MenuItemConstructorOptions[] | null = null
@@ -17,29 +61,17 @@ const useMenu = singleRun(() => {
   })
 
   // TODO
-  ipcMain.on('menu:context', () => {
-    const testMenu = Menu.buildFromTemplate([
-      {
-        label: 'Test',
-        submenu: [
-          {
-            label: 'Item 1',
-            click: () => {
-              console.log('Item 1 clicked')
-            }
-          },
-          {
-            label: 'Item 2',
-            click: () => {
-              console.log('Item 2 clicked')
-            }
-          }
-        ]
+  ipcMain.on(
+    'menu:context',
+    (
+      _,
+      data: {
+        items: MenuItem[]
       }
-    ])
-
-    testMenu.popup()
-  })
+    ) => {
+      createMenuPopup(data.items)
+    }
+  )
 
   return {
     /** 持久化菜单(用于windows等系统上的前端菜单显示), 向前端发送菜单变动事件 */
@@ -50,7 +82,7 @@ const useMenu = singleRun(() => {
       const { getConfig } = useConfig()
       menu = createWinMenu(lang, await getConfig())
       wins.forEach((_, fullWin) => {
-        fullWin.webContents.send('menu:update', menu)
+        fullWin?.webContents.send('menu:update', menu)
       })
     }
   }

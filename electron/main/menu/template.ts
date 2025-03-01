@@ -592,7 +592,17 @@ const createMenuTemplate = (lang: Lang, config: Config) =>
       submenu: [
         {
           label: getValue(lang, 'title.menu.help.items.search', 'Search'),
-          accelerator: isMac ? 'Cmd+P' : 'Ctrl+P'
+          accelerator: isMac ? 'Cmd+P' : 'Ctrl+P',
+          click: (_, win) => {
+            if (win && win instanceof BrowserWindow) {
+              const command = useCommand()
+              command.parseAndRun('> search open', {
+                reply: win.webContents.send.bind(win.webContents),
+                sender: win.webContents
+              })
+            }
+          },
+          command: '> search open'
         },
         { type: 'separator' },
         {
@@ -654,11 +664,16 @@ const createMenuTemplate = (lang: Lang, config: Config) =>
             'Toggle Developer Tools'
           ),
           accelerator: process.env.NODE_ENV === 'development' ? 'F12' : '',
-          click: (_, focusedWindow) => {
-            if (focusedWindow && focusedWindow instanceof BrowserWindow) {
-              focusedWindow.webContents.toggleDevTools()
+          click: (_, win) => {
+            if (win && win instanceof BrowserWindow) {
+              const command = useCommand()
+              command.parseAndRun('> toggleDevTools switch', {
+                reply: win.webContents.send.bind(win.webContents),
+                sender: win.webContents
+              })
             }
-          }
+          },
+          command: '> toggleDevTools switch'
         },
         ...((!isMac
           ? []
