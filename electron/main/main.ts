@@ -107,6 +107,12 @@ function createWindow(
     // 对完整视口窗口
     wins.set(win, new Set())
     fullWinWorkspaces.set(win, '[workspace:temp]')
+
+    win.on('close', () => {
+      wins.delete(win)
+      workspaceFullWins.delete(fullWinWorkspaces.get(win) ?? '')
+      fullWinWorkspaces.delete(win)
+    })
   } else {
     // 对仅主视口窗口
     if (parentWebContents) {
@@ -115,6 +121,9 @@ function createWindow(
 
       const close = () => {
         win.close()
+        wins.delete(win)
+        workspaceFullWins.delete(fullWinWorkspaces.get(win) ?? '')
+        fullWinWorkspaces.delete(win)
       }
 
       // 当子窗口关闭时, 移除子窗口
@@ -181,18 +190,17 @@ function createWindow(
 // 在 macOS 上，应用程序及其菜单栏通常会保持活动状态
 // 直到用户使用 Cmd + Q 明确退出
 app.on('window-all-closed', () => {
+  // 清理 workspace/__temp__ 目录
+  const tempDir = path.join(
+    app.getPath('userData'),
+    'config',
+    'workspace',
+    '__temp__'
+  )
+  fs.rmdir(tempDir, { recursive: true }, () => {})
   if (process.platform !== 'darwin') {
     app.quit()
     wins.clear()
-  } else {
-    // 清理 workspace/__temp__ 目录
-    const tempDir = path.join(
-      app.getPath('userData'),
-      'config',
-      'workspace',
-      '__temp__'
-    )
-    fs.rmdir(tempDir, { recursive: true }, () => {})
   }
 })
 

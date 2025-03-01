@@ -1,4 +1,5 @@
-export const debounce = <T extends (...args: unknown[]) => unknown>(
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export const debounce = <T extends (...args: any[]) => unknown>(
   fn: T,
   delay: number = 300
 ) => {
@@ -14,7 +15,7 @@ export const debounce = <T extends (...args: unknown[]) => unknown>(
   }
 }
 
-export const throttle = <T extends (...args: unknown[]) => unknown>(
+export const throttle = <T extends (...args: any[]) => unknown>(
   fn: T,
   delay: number = 300
 ) => {

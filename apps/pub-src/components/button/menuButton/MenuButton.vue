@@ -1,20 +1,14 @@
 <script lang="ts">
-export type MenuItem = {
-  label: string
-  type?:
-    | 'normal'
-    | 'separator'
-    | 'submenu'
-    | 'checkbox'
-    | 'radio'
-    | 'remaining'
-    | 'all remaining'
-  submenu?: MenuItem[]
-}
+import { createMenuPopup, type MenuItem } from '../../popup/MenuPopup'
+import { windowEvent } from '@apps/utils/windowEvent'
+import ipc from '@apps/utils/ipc'
+export type { MenuItem }
 export type MenuButtonProps = {
   item: MenuItem
   /** 仅当上次鼠标聚焦在menu的任意项时, 处理鼠标hover */
   readyToFocus: boolean
+  /** 是否可以在鼠标移入时显示, 当值为false时，只能在鼠标点击时显示 */
+  hoverShow: boolean
 }
 export type MountEvent = {
   width: number
@@ -22,26 +16,93 @@ export type MountEvent = {
   item: MenuItem
 }
 export type MenuButtonEvents = {
-  click: [item: MenuItem]
   onMounted: [event: MountEvent]
+  show: [item: MenuItem]
+  hide: [item: MenuItem]
+  click: [item: MenuItem]
 }
 </script>
 
 <script lang="ts" setup>
 import { useStyle } from '@apps/style'
-import { computed, onMounted, useTemplateRef } from 'vue'
+import {
+  computed,
+  onMounted,
+  onUnmounted,
+  ref,
+  useTemplateRef,
+  watch
+} from 'vue'
 import Icon from '@comp/IconFont/IconFont.vue'
 import { useCssVar } from '@apps/store/modules/useCssVar'
 
-const { item, readyToFocus } = defineProps<MenuButtonProps>()
+const { item, readyToFocus, hoverShow } = defineProps<MenuButtonProps>()
 const emit = defineEmits<MenuButtonEvents>()
+const isFocused = ref(true)
+
+let unListenFns: Promise<[Ipc.UnListen, Ipc.UnListen]>
+onMounted(() => {
+  unListenFns = Promise.all([
+    ipc.on('window:blur', () => {
+      isFocused.value = false
+    }),
+    ipc.on('window:focus', () => {
+      isFocused.value = true
+    })
+  ])
+})
+onUnmounted(() => {
+  unListenFns.then(([unListen1, unListen2]) => {
+    unListen1()
+    unListen2()
+  })
+})
 const cssVar = useCssVar()
 const style = useStyle()
 const fontFamily = computed(() => style.style['font-family'])
-const clickHandler = () => {
-  emit('click', item)
-}
 const menuBarRef = useTemplateRef<HTMLDivElement>('menu-bar-ref')
+let control: ReturnType<typeof createMenuPopup> | null = null
+const hidePopup = (e?: MouseEvent) => {
+  const hasHide = control?.hide(e ?? new MouseEvent(''))
+  if (hasHide) {
+    emit('hide', item)
+    control = null
+    unListener()
+  }
+}
+
+watch(isFocused, (v) => {
+  if (!v) {
+    hidePopup()
+  }
+})
+
+let unListener = () => {}
+const openMenuPopup = () => {
+  if (control) return
+
+  control = createMenuPopup(
+    item.submenu ?? [],
+    (item) => {
+      emit('click', item)
+      hidePopup()
+    },
+    {
+      x: menuBarRef.value?.getBoundingClientRect().x ?? 0,
+      y:
+        (menuBarRef.value?.getBoundingClientRect().y ?? 0) +
+        (menuBarRef.value?.offsetHeight ?? 0)
+    }
+  )
+  emit('show', item)
+  unListener = windowEvent('mousedown', (e) => {
+    hidePopup(e)
+  })
+}
+const switchMenuPopup = () => {
+  if (control || !hoverShow) return
+  openMenuPopup()
+}
 onMounted(() => {
   if (!menuBarRef.value) return
   const { width, height } = menuBarRef.value?.getBoundingClientRect()
@@ -59,6 +120,13 @@ const iconName = computed(() => {
   return ''
 })
 const iconColor = computed(() => cssVar.vars['menu-btn-font'])
+defineExpose({
+  hide: () => {
+    control?.hide(new MouseEvent(''))
+    control = null
+    unListener()
+  }
+})
 </script>
 
 <template>
@@ -69,10 +137,10 @@ const iconColor = computed(() => cssVar.vars['menu-btn-font'])
       'ready-to-focus': readyToFocus
     }"
   >
-    <button v-if="isIcon" @click="clickHandler">
+    <button v-if="isIcon" @click="openMenuPopup" @mouseenter="switchMenuPopup">
       <Icon :name="iconName" :size="16" :color="iconColor" />
     </button>
-    <button v-else @click="clickHandler">
+    <button v-else @click="openMenuPopup" @mouseenter="switchMenuPopup">
       {{ item.label }}
     </button>
   </div>

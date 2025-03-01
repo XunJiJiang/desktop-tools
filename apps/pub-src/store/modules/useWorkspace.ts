@@ -94,7 +94,7 @@ export const setOpenData = async (paths: string[], type: OpenData['type']) => {
   }
 }
 
-const createBaseWorkspaceConfig = (): WorkspaceConfig => ({
+export const createBaseWorkspaceConfig = (): WorkspaceConfig => ({
   type: 'temp',
   dir: null,
   'open-file-path': [],

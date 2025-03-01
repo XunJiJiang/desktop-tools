@@ -3,6 +3,8 @@
 // 与 default:dark 的值相同
 // tr-bg 结尾的变量 透明度可以通过config调整
 
+$base-bg: #2f2f2f !default;
+
 $body-tr-bg: #2f2f2f !default;
 
 $title-bar-bg: #24242433 !default;
@@ -15,7 +17,25 @@ $tooltip-bg: #2f2f2f !default;
 $tooltip-arrow-bg: #2f2f2f !default;
 $tooltip-border: #6e6e6e !default;
 $tooltip-font: #fff !default;
+$tooltip-box-shadow: #0005 !default;
 
 $menu-btn-hover-bg: #99999966 !default;
 $menu-btn-font: #fff !default;
 $menu-btn-active-border: #7a7a7a !default;
+
+$base-popup-bg: #2f2f2fcc !default;
+$base-popup-border: #6e6e6e !default;
+$base-popup-font: #fff !default;
+$base-popup-box-shadow: #0005 !default;
+$base-popup-hover-bg: #aaaaaa22 !default;
+
+$base-input-border: #2592ffbf !default;
+$base-input-focus-border: #2592ff !default;
+$base-input-focus-shadow: #2592ff86 !default;
+$base-input-button-bg: #2592ff !default;
+$base-input-button-font: #fff !default;
+$base-input-button-hover-bg: #2592ffcc !default;
+$base-input-button-active-bg: #2592ffac;
+
+$menu-popup-button-hover: #2c58ba !default;
+$menu-popup-button-active: #2c59babd !default;

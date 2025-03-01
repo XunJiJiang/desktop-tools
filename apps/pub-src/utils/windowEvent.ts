@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-type Type =
+export type Type =
   | 'click'
   | 'contextmenu'
   | 'dblclick'

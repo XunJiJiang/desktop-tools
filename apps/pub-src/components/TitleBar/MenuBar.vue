@@ -1,10 +1,10 @@
-<script lang="ts">
+<script lang="ts" setup>
 import { computed, useTemplateRef } from 'vue'
 import { useMenu } from './hooks/useMenu'
-</script>
-
-<script lang="ts" setup>
-import MenuButton from '@comp/button/menuButton/MenuButton.vue'
+import MenuButton, {
+  type MenuItem
+} from '@comp/button/menuButton/MenuButton.vue'
+import { send } from '@apps/utils/ipc'
 const { titleBarStyle, maxWidth: mw } = defineProps({
   isFocused: {
     type: Boolean,
@@ -19,12 +19,18 @@ const { titleBarStyle, maxWidth: mw } = defineProps({
     required: true
   }
 })
-
+const clickHandler = (item: MenuItem) => {
+  if (item.command) {
+    send('command:parseAndRun', item.command)
+  }
+}
 const maxWidth = computed(() => mw)
 const menuBarRef = useTemplateRef<HTMLDivElement>('menuBarRef')
 const {
   menu,
-  menuHandler,
+  showHandler,
+  hideHandler,
+  hoverShow,
   getRemainingWidth,
   getAllRemainingWidth,
   getSingleWidth,
@@ -48,14 +54,19 @@ const {
       <!-- TODO: 此处, 需要响应式, 宽度不足时隐藏部分 -->
       <li v-for="item in menu" :key="item.label">
         <MenuButton
+          ref="menu-button-list-ref"
           :item="item"
           :ready-to-focus="true"
-          @click="menuHandler"
+          :hover-show="hoverShow"
+          @show="showHandler"
+          @hide="hideHandler"
+          @click="clickHandler"
           @on-mounted="getSingleWidth"
         />
       </li>
       <li>
         <MenuButton
+          ref="menu-button-remaining-ref"
           v-if="showRemaining"
           :item="{
             label: '未完全展示项',
@@ -63,12 +74,16 @@ const {
             submenu: remainingMenu
           }"
           :ready-to-focus="true"
-          @click="menuHandler"
+          :hover-show="hoverShow"
+          @show="showHandler"
+          @hide="hideHandler"
+          @click="clickHandler"
           @on-mounted="getRemainingWidth"
         />
       </li>
       <li>
         <MenuButton
+          ref="menu-button-all-remaining-ref"
           v-if="showAllRemaining"
           :item="{
             label: '全部菜单项',
@@ -76,7 +91,10 @@ const {
             submenu: allRemainingMenu
           }"
           :ready-to-focus="true"
-          @click="menuHandler"
+          :hover-show="hoverShow"
+          @show="showHandler"
+          @hide="hideHandler"
+          @click="clickHandler"
           @on-mounted="getAllRemainingWidth"
         />
       </li>

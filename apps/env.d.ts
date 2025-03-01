@@ -54,6 +54,50 @@ interface Listener<UnListen = void> {
     channel: 'menu:update',
     listener: (event: IpcRendererEvent, menu: any) => void
   ): Ipc.UnListen
+
+  (
+    channel: 'msg:create:top',
+    listener: (
+      event: IpcRendererEvent,
+      data: {
+        message: string
+        type: 'success' | 'danger' | 'warning' | 'info'
+      }
+    ) => void
+  ): UnListen
+
+  /**
+   * 收到此消息时, 将打开或更新搜索框, 将value作为初始值, items 作为下方加载的选项
+   * 若已经打开, 则仅更新 items
+   * 此接口可能会变动
+   */
+  (
+    channel: 'search:load',
+    listener: (
+      event: IpcRendererEvent,
+      data: {
+        value: string
+      }
+    ) => void
+  ): UnListen
+  (
+    channel: 'search:updateItems',
+    listener: (
+      event: IpcRendererEvent,
+      data: {
+        items: {
+          value: string
+          command: string | null
+          info: any
+        }[]
+      }
+    ) => void
+  ): UnListen
+
+  (
+    channel: 'language:change',
+    listener: (event: IpcRendererEvent, lang: string) => void
+  ): UnListen
 }
 
 interface Send {
@@ -166,4 +210,10 @@ interface Invoke {
     channel: 'command:fuzzyParse',
     fullCommand: string
   ): Promise<[string, import('@/types/command.d.ts').Comment[]]>
+
+  (channel: 'cursor:getPosition'): Promise<{
+    x: number
+    y: number
+    inWindow: boolean
+  }>
 }

@@ -1,3 +1,4 @@
+import useCursor from './handle/cursor'
 import usePath from './handle/path'
 import useFs from './handle/fs'
 // import useSqlite from './handle/node:sqlite'
@@ -11,6 +12,7 @@ import useAppRegion from './handle/app-region'
 
 const useHandle = () => {
   useAppRegion()
+  useCursor()
   usePath()
   useFs()
   useSqlite()

@@ -4,13 +4,13 @@
  * 没有过渡动画
  */
 
-// TODO: left 和 right 横向边缘定位优化, top 和 bottom 纵向边缘定位优化
-
 import { createVNode, render, type Directive } from 'vue'
 import { useMountElement } from '@apps/hooks/useMountElement'
 import ToolTip, { type TooltipProps } from './ToolTip.vue'
 
-const root = useMountElement('tooltip-root')
+const root = useMountElement('tooltip-root', {
+  zIndex: 9999
+})
 
 /** 移除上一次渲染 ToolTip 的元素 同时用于判断是否存在 tooltip */
 let ele: HTMLElement | null = null
@@ -48,7 +48,7 @@ const showToolTip = (props: TooltipProps, target: HTMLElement) => {
     }
   }
 
-  const vnode = createVNode(ToolTip, props)
+  const vnode = createVNode(ToolTip, { ...props, key: new Date().toString() })
   render(vnode, root)
   map.set(target, {
     remove: () => {
@@ -71,8 +71,8 @@ const onHover = (
     message: msg,
     position,
     target: {
-      y: target.offsetTop,
-      x: target.offsetLeft,
+      y: target.getBoundingClientRect().y,
+      x: target.getBoundingClientRect().x,
       width: target.offsetWidth,
       height: target.offsetHeight
     }

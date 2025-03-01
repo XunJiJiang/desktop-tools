@@ -23,7 +23,7 @@ const { message, position = 'top', target } = defineProps<TooltipProps>()
 const contentWidth = computed(
   () =>
     getStringWidth(message, {
-      fontSize: 12,
+      fontSize: '12px',
       fontFamily: style.get('font-family')
     }) +
     ARROW_SIZE * 2 +
@@ -140,6 +140,8 @@ const containerLeft = computed(() => containerPosition.value[0] + 'px')
     backdrop-filter: blur(10px);
     border: 1px solid var(--tooltip-border, $tooltip-border);
     border-radius: 4px;
+
+    box-shadow: 0 0 10px var(--tooltip-box-shadow, $tooltip-box-shadow);
 
     font-size: 12px;
     line-height: 20px;

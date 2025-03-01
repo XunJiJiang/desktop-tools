@@ -8,8 +8,8 @@ const mountRoot = (() => {
     left: 0;
     right: 0;
     bottom: 0;
-    width: 0;
-    height: 0;
+    width: 100%;
+    height: 100%;
     background: transparent;
     overflow: visible;
     pointer-events: none;
@@ -20,12 +20,11 @@ const mountRoot = (() => {
 })()
 
 type UseMountElementOptions = {
-  interaction?: boolean,
   zIndex?: number
 }
 
 export const useMountElement = (id: string, opt?: UseMountElementOptions) => {
-  const { interaction = false, zIndex = 0 } = opt || {}
+  const { zIndex = 0 } = opt || {}
 
   const container =
     mountRoot.querySelector<HTMLDivElement>(`#__float-${id}__`) ??
@@ -37,12 +36,12 @@ export const useMountElement = (id: string, opt?: UseMountElementOptions) => {
         position: absolute;
         top: 0;
         left: 0;
-        width: 0;
-        height: 0;
+        width: 100%;
+        height: 100%;
         background: transparent;
         overflow: visible;
         z-index: ${zIndex};
-        pointer-events: ${interaction ? 'auto' : 'none'};
+        pointer-events: none;
       `
       mountRoot.appendChild(el)
       return el

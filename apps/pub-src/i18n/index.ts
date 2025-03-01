@@ -3,7 +3,7 @@ import config from '@apps/utils/config'
 import { watch, nextTick } from 'vue'
 import { useStyle } from '@apps/style'
 import { isMac, isWindows } from '@apps/utils/userAgent'
-import { invoke } from '@apps/utils/ipc'
+import { invoke, on } from '@apps/utils/ipc'
 
 const getBrowserLocale = (): string => {
   const navigatorLocale = navigator.language || navigator.languages[0]
@@ -76,6 +76,10 @@ config.then((c) => {
     await loadLocaleMessages(language)
     i18n.global.locale.value = language
     setFontFamily(language)
+  })
+
+  on('language:change', (_, lang) => {
+    c.update('language', lang)
   })
 })
 

@@ -1,4 +1,5 @@
 {
+  "base-bg": "#2f2f2f",
   "body-tr-bg": "#2f2f2f",
   "title-bar-bg": "#24242433",
   "base-font-0": "#fff",
@@ -8,7 +9,16 @@
   "tooltip-arrow-bg": "#2f2f2f",
   "tooltip-border": "#6e6e6e",
   "tooltip-font": "#fff",
+  "tooltip-box-shadow": "#0005",
   "menu-btn-hover-bg": "#99999966",
   "menu-btn-font": "#fff",
-  "menu-btn-active-border": "#7a7a7a"
+  "menu-btn-active-border": "#7a7a7a",
+  "base-popup-bg": "#2f2f2fcc",
+  "base-popup-border": "#6e6e6e",
+  "base-popup-font": "#fff",
+  "base-popup-box-shadow": "#0005",
+  "base-popup-hover-bg": "#aaaaaa22",
+  "base-input-border": "#2592ffbf",
+  "base-input-focus-border": "#2592ff",
+  "base-input-focus-shadow": "#2592ff86"
 }

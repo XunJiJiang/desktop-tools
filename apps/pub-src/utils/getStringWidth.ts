@@ -1,14 +1,20 @@
 type Config = {
-  fontSize?: number
+  fontSize?: string
   fontFamily?: string
+  fontWidth?: string
 }
 
 export const getStringWidth = (str: string, config: Config = {}) => {
-  const { fontSize = 16, fontFamily = 'Arial' } = config
+  const {
+    fontSize = '16px',
+    fontFamily = 'Arial',
+    fontWidth = 'normal'
+  } = config
   const span = document.createElement('span')
   span.style.visibility = 'hidden'
-  span.style.fontSize = `${fontSize}px`
+  span.style.fontSize = fontSize
   span.style.fontFamily = fontFamily
+  span.style.fontWeight = fontWidth
   span.style.position = 'absolute'
   span.style.top = '-9999px'
   span.textContent = str

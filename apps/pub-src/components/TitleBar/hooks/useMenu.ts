@@ -1,4 +1,5 @@
 import ipc from '@apps/utils/ipc'
+import type MenuButton from '@comp/button/menuButton/MenuButton.vue'
 import type {
   MenuItem,
   MountEvent
@@ -10,7 +11,8 @@ import {
   reactive,
   ref,
   nextTick,
-  type ComputedRef
+  type ComputedRef,
+  useTemplateRef
 } from 'vue'
 
 export const useMenu = (maxWidth: ComputedRef<number>) => {
@@ -106,7 +108,6 @@ export const useMenu = (maxWidth: ComputedRef<number>) => {
   let unListerFn: Ipc.UnListen = () => {}
   onMounted(() => {
     unListerFn = ipc.on('menu:update', (_, _menu) => {
-      console.log(_menu)
       allMenu.value = _menu
       buttonWidthMap.clear()
       hasMenuUpdate.value = true
@@ -115,11 +116,45 @@ export const useMenu = (maxWidth: ComputedRef<number>) => {
   onUnmounted(() => {
     unListerFn()
   })
+  const menuListRef = useTemplateRef<InstanceType<typeof MenuButton>[]>(
+    'menu-button-list-ref'
+  )
+  const menuRemainingRef = useTemplateRef<InstanceType<typeof MenuButton>>(
+    'menu-button-remaining-ref'
+  )
+  const menuAllRemainingRef = useTemplateRef<InstanceType<typeof MenuButton>>(
+    'menu-button-all-remaining-ref'
+  )
+  /** 是否允许hover打开菜单, 仅当存在打开的菜单时为true */
+  const hoverShow = ref(false)
   return {
     menu,
-    menuHandler: (item: MenuItem) => {
-      console.log(item)
+    showHandler: (item: MenuItem) => {
+      hoverShow.value = true
+      if (item.submenu === remainingSubmenu.value) {
+        menuListRef.value?.forEach((btn) => {
+          btn.hide()
+        })
+        menuAllRemainingRef.value?.hide()
+      } else if (item.submenu === allRemainingSubmenu.value) {
+        menuListRef.value?.forEach((btn) => {
+          btn.hide()
+        })
+        menuRemainingRef.value?.hide()
+      } else {
+        menuListRef.value?.forEach((btn, i) => {
+          if (menu.value[i] !== item) {
+            btn.hide()
+          }
+        })
+        menuRemainingRef.value?.hide()
+        menuAllRemainingRef.value?.hide()
+      }
     },
+    hideHandler: () => {
+      hoverShow.value = false
+    },
+    hoverShow,
     getRemainingWidth: (ev: MountEvent) => {
       remainingWidth.value = ev.width
     },

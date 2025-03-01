@@ -9,12 +9,22 @@
 // 4. 内部指令, 由内部注册, 不使用指令解析器, 直接触发
 //    触发内部功能, 例如: 菜单项
 
-import { ipcMain, type IpcMainInvokeEvent, type WebContents } from 'electron'
+import { ipcMain, type IpcMainInvokeEvent } from 'electron'
 import { singleRun } from '@/utils/singleRun'
 import { getValue } from '@ele/utils/getValue'
 import useI18n from '@ele/ipc/handle/i18n'
-import useConfig from '@ele/ipc/handle/config'
-import useMenu from '@ele/ipc/handle/menu'
+import {
+  BASE_CALLBACK,
+  FUZZY_CALLBACK,
+  type CommandCallback,
+  type CommandCallbackEvent,
+  type CommandCallbacks,
+  type CommandEvent,
+  type CommandNode,
+  type Comment,
+  type FuzzyCommandCallback
+} from './command/types'
+import globalCB from './command/global'
 
 export const COMMAND_TYPE: Record<string, string> = {
   FILE: 'file',
@@ -22,51 +32,6 @@ export const COMMAND_TYPE: Record<string, string> = {
   // WORKSPACE_TEXT: 'workspace text',
   INTERNAL: 'internal'
 }
-
-/** [mark] [command] [token1] [token2] ... */
-export interface CommandNode {
-  /** 类型(枚举) */
-  type: string
-  /** 标识 */
-  mark: string
-  /** 指令 */
-  command: string
-  /** token数组 */
-  tokens: string[]
-}
-
-type Comment = import('@/types/command.d.ts').Comment
-
-type CommandCallbackEvent = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  reply: (channel: string, ...args: any[]) => void
-  getTitle: WebContents['getTitle']
-  focus: WebContents['focus']
-  isFocused: WebContents['isFocused']
-  send: WebContents['send']
-}
-
-type CommandEvent = {
-  reply: CommandCallbackEvent['reply']
-  sender: WebContents
-}
-
-type CommandCallback = (event: CommandCallbackEvent, node: CommandNode) => void
-type FuzzyCommandCallback = (
-  event: CommandCallbackEvent,
-  node: CommandNode
-) => Comment[] | Promise<Comment[]>
-
-/**
- * [command]: [callback, comment]
- */
-type CommandCallbacks = Record<string, [CommandCallback, string]> & {
-  [BASE_CALLBACK]: [CommandCallback, string]
-  [FUZZY_CALLBACK]: [FuzzyCommandCallback, string]
-}
-
-const BASE_CALLBACK: symbol = Symbol('base callback')
-const FUZZY_CALLBACK: symbol = Symbol('fuzzy callback')
 
 /**
  * 指令类型和对应的标识, 例如: GLOBAL(>)
@@ -167,64 +132,15 @@ const createCommandRegister = (
 
 /** 初始化 > 和 % 标识指令 */
 const initCommandRegister = () => {
-  const { updateAppMenu: updateMenu } = useMenu()
   const global = createCommandRegister(
     'GLOBAL',
     'global',
     '>',
-    (_, node) => {
-      console.warn('GLOBAL command', node)
-    },
-    () => [],
+    globalCB.command,
+    globalCB.fuzzyCommand,
     {
       cover: false
     }
-  )
-  global?.add(
-    'test',
-    (win, node) => {
-      console.log('GLOBAL test', node)
-    },
-    'test'
-  )
-  global?.add(
-    't',
-    (win, node) => {
-      console.log('GLOBAL text', node)
-    },
-    't'
-  )
-  global?.add(
-    'autoSave',
-    () => {
-      const { updateWebviewConfig } = useConfig()
-      updateWebviewConfig((config) => {
-        const oldSaveConfig = config.menu?.file?.autoSave ?? false
-        const newSaveConfig = !oldSaveConfig
-        config.menu = config.menu ?? {}
-        config.menu.file = config.menu.file ?? {}
-        config.menu.file.autoSave = newSaveConfig
-        return config
-      })
-      updateMenu()
-    },
-    'title.menu.file.items.autoSave'
-  )
-  global?.add(
-    'autoLineBreak',
-    () => {
-      const { updateWebviewConfig } = useConfig()
-      updateWebviewConfig((config) => {
-        const oldLineBreakConfig = config.menu?.view?.autoLineBreak ?? false
-        const newLineBreakConfig = !oldLineBreakConfig
-        config.menu = config.menu ?? {}
-        config.menu.view = config.menu.view ?? {}
-        config.menu.view.autoLineBreak = newLineBreakConfig
-        return config
-      })
-      updateMenu()
-    },
-    'title.menu.view.items.autoLineBreak'
   )
 
   createCommandRegister(
@@ -252,7 +168,6 @@ const parseCommand = (fullCommand: string): [CommandNode, CommandCallback] => {
   // 用户输入的 标识和第一个token 有空格时
   if (COMMAND_MARK.has(command)) {
     const [type, callback] = COMMAND_MARK.get(command) ?? []
-    console.log('command', type, callback)
     if (type && callback) {
       return [
         {
@@ -261,7 +176,7 @@ const parseCommand = (fullCommand: string): [CommandNode, CommandCallback] => {
           command: command2,
           tokens: [...tokens]
         },
-        callback[command2][0] ?? callback[BASE_CALLBACK][0]
+        callback[command2]?.[0] ?? callback[BASE_CALLBACK][0]
       ]
     }
   }
@@ -277,9 +192,9 @@ const parseCommand = (fullCommand: string): [CommandNode, CommandCallback] => {
           type,
           mark,
           command: _command,
-          tokens
+          tokens: [command2, ...tokens]
         },
-        callback[_command][0] ?? callback[BASE_CALLBACK][0]
+        callback[_command]?.[0] ?? callback[BASE_CALLBACK][0]
       ]
     }
   }
@@ -326,7 +241,7 @@ const fuzzyParseCommand = async (
   fullCommand: string,
   event: IpcMainInvokeEvent
 ): Promise<[string, Comment[]]> => {
-  const [command, command2] = fullCommand
+  const [command, command2, ...tokens] = fullCommand
     .split(' ')
     .filter((item) => item !== '')
   if (COMMAND_MARK.has(command)) {
@@ -347,7 +262,7 @@ const fuzzyParseCommand = async (
         type: COMMAND_TYPE.GLOBAL,
         mark: command,
         command: command2,
-        tokens: []
+        tokens: tokens
       }
     )
     if (comments.length > 0) return [command, comments]
@@ -393,7 +308,7 @@ const fuzzyParseCommand = async (
     ][0] as FuzzyCommandCallback
     const comments = await getFuzzyComments(
       {
-        reply: () => {},
+        reply: event.sender.send,
         getTitle: event.sender.getTitle,
         focus: event.sender.focus,
         isFocused: event.sender.isFocused,
@@ -401,9 +316,9 @@ const fuzzyParseCommand = async (
       },
       {
         type: COMMAND_TYPE.GLOBAL,
-        mark: command,
-        command: command2,
-        tokens: []
+        mark: mark,
+        command: command.slice(mark.length),
+        tokens: [command2, ...tokens]
       }
     )
     if (comments.length > 0) return [command, comments]
@@ -434,19 +349,7 @@ const fuzzyParseCommand = async (
 
   // TODO: 针对%指令, 需要查找工作区文本并返回
   // TODO: 认为是文件指令, 此处查找工作区文件, 返回相对路径
-  return [
-    'file',
-    [
-      {
-        command: 'file',
-        comment: 'file'
-      },
-      {
-        command: 'file2',
-        comment: 'file2'
-      }
-    ]
-  ]
+  return ['file', []]
 }
 
 const useCommand = singleRun(() => {

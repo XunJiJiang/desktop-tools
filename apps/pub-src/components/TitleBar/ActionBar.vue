@@ -4,6 +4,7 @@
 import { computed, reactive, watch } from 'vue'
 import IconFont from '@comp/IconFont/IconFont.vue'
 import {
+  createBaseWorkspaceConfig,
   useWorkspace,
   type WorkspaceConfig
 } from '@apps/store/modules/useWorkspace'
@@ -22,30 +23,35 @@ const color = computed(() => {
   return isFocused ? cssVar.vars['base-font-1'] : cssVar.vars['base-font-2']
 })
 
-const actionBarConfig = reactive<WorkspaceConfig['title-bar']['action-bar']>({
-  'left-panel': { show: false },
-  'layout-panel': { show: false },
-  'right-panel': { show: false }
-})
+const baseWorkspaceConfig = createBaseWorkspaceConfig()
+
+const actionBarConfig = reactive<WorkspaceConfig['title-bar']['action-bar']>(
+  baseWorkspaceConfig['title-bar']['action-bar']
+)
 
 watch(
   () => workspace.workspaceConfig,
   (v) => {
     if (v) {
       actionBarConfig['left-panel'].show =
-        v.value['title-bar']?.['action-bar']?.['left-panel']?.show ?? false
+        v.value['title-bar']?.['action-bar']?.['left-panel']?.show ??
+        baseWorkspaceConfig['title-bar']['action-bar']['left-panel'].show
       actionBarConfig['layout-panel'].show =
-        v.value['title-bar']?.['action-bar']?.['layout-panel']?.show ?? false
+        v.value['title-bar']?.['action-bar']?.['layout-panel']?.show ??
+        baseWorkspaceConfig['title-bar']['action-bar']['layout-panel'].show
       actionBarConfig['right-panel'].show =
-        v.value['title-bar']?.['action-bar']?.['right-panel']?.show ?? false
+        v.value['title-bar']?.['action-bar']?.['right-panel']?.show ??
+        baseWorkspaceConfig['title-bar']['action-bar']['right-panel'].show
       v.on('title-bar.action-bar', (actionBar) => {
-        console.log('actionBar', actionBar)
         actionBarConfig['left-panel'].show =
-          actionBar['left-panel']?.show ?? false
+          actionBar['left-panel']?.show ??
+          baseWorkspaceConfig['title-bar']['action-bar']['left-panel'].show
         actionBarConfig['layout-panel'].show =
-          actionBar['layout-panel']?.show ?? false
+          actionBar['layout-panel']?.show ??
+          baseWorkspaceConfig['title-bar']['action-bar']['layout-panel'].show
         actionBarConfig['right-panel'].show =
-          actionBar['right-panel']?.show ?? false
+          actionBar['right-panel']?.show ??
+          baseWorkspaceConfig['title-bar']['action-bar']['right-panel'].show
       })
     }
   }
