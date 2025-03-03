@@ -20,7 +20,7 @@ export type MenuItem = {
 }
 export const createMenuPopup = (
   menu: MenuItem[],
-  onClick: (item: MenuItem, e: MouseEvent) => void,
+  onChoose: (item: MenuItem, e: MouseEvent) => void,
   position?: {
     x: number
     y: number
@@ -35,8 +35,8 @@ export const createMenuPopup = (
         createVNode(MenuPopup, {
           ref: childPopupRef,
           items: menu,
-          onClick: (item: MenuItem, e: MouseEvent) => {
-            onClick(item, e)
+          onChoose: (item: MenuItem, e: MouseEvent) => {
+            onChoose(item, e)
             control.hide(e)
           },
           createMenuPopup

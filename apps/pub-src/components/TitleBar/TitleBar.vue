@@ -118,7 +118,7 @@ onUnmounted(() => {
 
       <ActionBar v-if="showMenu" :isFocused />
 
-      <div v-if="titleBarStyle !== 'macos'" class="window-control"></div>
+      <div v-if="titleBarStyle === 'windows'" class="window-control"></div>
     </div>
   </div>
 </template>

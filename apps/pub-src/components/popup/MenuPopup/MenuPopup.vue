@@ -21,7 +21,7 @@ const { items: _items, createMenuPopup } = defineProps<{
   ) => Omit<ReturnType<typeof createBasePopup>, 'hide'> & MenuPopupExposed
 }>()
 const emit = defineEmits<{
-  click: [item: MenuItem, e: MouseEvent]
+  choose: [item: MenuItem, e: MouseEvent]
   createMenuPopup: [
     item: MenuItem[],
     (item: MenuItem, e: MouseEvent) => void,
@@ -60,7 +60,7 @@ const clickHandler = (item: MenuItem, e: MouseEvent) => {
     return
   }
   if (!Array.isArray(item.submenu) || item.submenu.length === 0) {
-    emit('click', item, e)
+    emit('choose', item, e)
   }
 }
 
@@ -78,7 +78,7 @@ const mouseenterHandle = (item: MenuItem, e: MouseEvent) => {
     childPopup.value = createMenuPopup(
       item.submenu,
       (item) => {
-        emit('click', item, e)
+        emit('choose', item, e)
       },
       // TODO: 需要计算位置, 防止超出屏幕
       {
@@ -115,7 +115,7 @@ defineExpose({
         }"
       >
         <button
-          @click="clickHandler(_item, $event)"
+          @mouseup="clickHandler(_item, $event)"
           @mouseenter="mouseenterHandle(_item, $event)"
         >
           {{ _item.label }}
@@ -217,7 +217,7 @@ li {
       );
     }
 
-    &:active {
+    &:hover:active {
       background-color: var(
         --menu-popup-button-active,
         $menu-popup-button-active
