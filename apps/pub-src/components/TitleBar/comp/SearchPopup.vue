@@ -23,6 +23,7 @@ const { baseValue = '' } = defineProps<{
 }>()
 
 type CommandItem = {
+  noLineBreak: boolean
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: any
 } & CommentType
@@ -38,17 +39,28 @@ const items = computed(() => {
   return [...itemsFromBackend.value, ...itemsFromFrontend.value]
 })
 let unListener: () => void
+let timeout: number | null = null
 onMounted(() => {
   // 监听从后端加载的items
   unListener = ipc.on('search:updateItems', (_, { items }) => {
-    itemsFromBackend.value = items
+    itemsFromBackend.value = items.map((item) => {
+      return {
+        ...item,
+        noLineBreak: true
+      }
+    })
   })
-  nextTick(() => {
-    commandChange()
-  })
+  timeout = setTimeout(() => {
+    nextTick(() => {
+      commandChange()
+    })
+  }, 50)
 })
 onUnmounted(() => {
   unListener?.()
+  if (timeout) {
+    clearTimeout(timeout)
+  }
 })
 
 const commandForm = useTemplateRef<HTMLFormElement>('command-form-ref')
@@ -67,18 +79,22 @@ const commandChange = debounce(async () => {
   // 请求后端解析命令
   const command = value.value
   const res = await ipc.invoke('command:fuzzyParse', command ?? '')
-  itemsFromFrontend.value = res.reduce<CommandItem[]>((pre, [, comments]) => {
-    for (const comment of comments) {
-      pre.push({
-        command: comment.command,
-        comment: comment.comment,
-        type: comment.type,
-        data: null
-      })
-    }
+  itemsFromFrontend.value = res.reduce<CommandItem[]>(
+    (pre, [mark, comments]) => {
+      for (const comment of comments) {
+        pre.push({
+          command: comment.command,
+          comment: comment.comment,
+          type: comment.type,
+          data: null,
+          noLineBreak: mark === comment.command
+        })
+      }
 
-    return pre
-  }, [])
+      return pre
+    },
+    []
+  )
 }, 300)
 
 const inputESC = (e: KeyboardEvent) => {
@@ -148,6 +164,7 @@ watch(value, () => {
       <ul>
         <li
           v-for="item in items"
+          :class="{ 'no-line-break': item.noLineBreak }"
           v-tooltip="[item.comment, 'bottom']"
           :key="item.command"
           @click="choose(item)"
@@ -193,17 +210,25 @@ watch(value, () => {
   }
 
   & li {
-    padding: 5px 10px;
+    padding: 5px 0;
     font-size: 13px;
     line-height: 16px;
     cursor: pointer;
 
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-
     &:hover {
       background-color: var(--base-popup-hover-bg, $base-popup-hover-bg);
+    }
+
+    &.no-line-break {
+      display: flex;
+    }
+
+    & .item-comment,
+    & .item-command {
+      margin-left: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     & .item-comment {
