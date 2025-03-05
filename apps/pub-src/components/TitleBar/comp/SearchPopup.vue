@@ -1,9 +1,12 @@
-<script lang="ts"></script>
+<script lang="ts">
+type CommentType = import('@/types/command.d.ts').Comment
+</script>
 
 <script lang="ts" setup>
 import ipc from '@apps/utils/ipc'
 import {
   computed,
+  nextTick,
   onMounted,
   onUnmounted,
   ref,
@@ -20,14 +23,12 @@ const { baseValue = '' } = defineProps<{
 }>()
 
 type CommandItem = {
-  value: string
-  command: string | null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  info: any
-}
+  data: any
+} & CommentType
 
 const emit = defineEmits<{
-  submit: [command: string | null, info: CommandItem['info'] | null]
+  submit: [command: string | null, data: CommandItem['data'] | null]
   close: []
 }>()
 
@@ -38,10 +39,12 @@ const items = computed(() => {
 })
 let unListener: () => void
 onMounted(() => {
-  // 从后端加载的items
-  // TODO: 还有一部分是从前端加载, 暂时不写
+  // 监听从后端加载的items
   unListener = ipc.on('search:updateItems', (_, { items }) => {
     itemsFromBackend.value = items
+  })
+  nextTick(() => {
+    commandChange()
   })
 })
 onUnmounted(() => {
@@ -53,24 +56,30 @@ const commandSubmit = (e: Event) => {
   e.preventDefault()
   if (!commandForm.value) return
   const command = new FormData(commandForm.value).get('command') as string
-  ipc.send('command:parseAndRun', command)
+  ipc.send('command:parseAndRun', command ?? '')
   commandForm.value?.reset()
   value.value = ''
   emit('submit', command, null)
   emit('close')
 }
 
-const commandChange = debounce(async (e: Event) => {
-  const command = (e.target as HTMLInputElement).value
-  const res = await ipc.invoke('command:fuzzyParse', command)
-  itemsFromFrontend.value = res[1].map(({ command, comment }) => {
-    return {
-      value: comment,
-      command,
-      info: comment
+const commandChange = debounce(async () => {
+  // 请求后端解析命令
+  const command = value.value
+  const res = await ipc.invoke('command:fuzzyParse', command ?? '')
+  itemsFromFrontend.value = res.reduce<CommandItem[]>((pre, [, comments]) => {
+    for (const comment of comments) {
+      pre.push({
+        command: comment.command,
+        comment: comment.comment,
+        type: comment.type,
+        data: null
+      })
     }
-  })
-}, 500)
+
+    return pre
+  }, [])
+}, 300)
 
 const inputESC = (e: KeyboardEvent) => {
   if (
@@ -87,11 +96,27 @@ const inputESC = (e: KeyboardEvent) => {
 const commandInputRef = useTemplateRef<HTMLInputElement>('command-input-ref')
 
 const choose = (item: CommandItem) => {
-  value.value = item.command ?? ''
-  commandInputRef.value?.focus()
+  switch (item.type) {
+    case 'run':
+      value.value = item.command
+      nextTick(() => {
+        commandSubmit(new Event('submit'))
+      })
+      break
+    case 'fill':
+      value.value = item.command
+      commandChange()
+      commandInputRef.value?.focus()
+      break
+    case 'info':
+      commandInputRef.value?.focus()
+      break
+    default:
+      break
+  }
 }
 
-const value = ref(baseValue)
+const value = ref(baseValue ?? '')
 watch(value, () => {
   itemsFromBackend.value = []
 })
@@ -123,11 +148,14 @@ watch(value, () => {
       <ul>
         <li
           v-for="item in items"
-          v-tooltip="[item.value, 'bottom']"
-          :key="item.value"
+          v-tooltip="[item.comment, 'bottom']"
+          :key="item.command"
           @click="choose(item)"
         >
-          {{ item.value }}
+          <div class="item-comment">{{ item.comment }}</div>
+          <div v-if="item.type !== 'info'" class="item-command">
+            {{ item.command }}
+          </div>
         </li>
       </ul>
     </div>
@@ -165,10 +193,9 @@ watch(value, () => {
   }
 
   & li {
-    height: 13px;
     padding: 5px 10px;
     font-size: 13px;
-    line-height: 13px;
+    line-height: 16px;
     cursor: pointer;
 
     overflow: hidden;
@@ -177,6 +204,14 @@ watch(value, () => {
 
     &:hover {
       background-color: var(--base-popup-hover-bg, $base-popup-hover-bg);
+    }
+
+    & .item-comment {
+      color: var(--base-font-1, $base-font-1);
+    }
+
+    & .item-command {
+      color: var(--base-font-2, $base-font-2);
     }
   }
 }

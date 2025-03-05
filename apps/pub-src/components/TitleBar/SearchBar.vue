@@ -59,7 +59,7 @@ const createSearchPopup = (value = '') => {
       key: 'search-popup',
       baseValue: value,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      onSubmit: (command: string | null, info: any) => {},
+      onSubmit: (command: string | null, data: any) => {},
       onClose: () => {
         closePopup()
       }

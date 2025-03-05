@@ -11,11 +11,8 @@
 
 import { ipcMain, type IpcMainInvokeEvent } from 'electron'
 import { singleRun } from '@/utils/singleRun'
-import { getValue } from '@ele/utils/getValue'
-import useI18n from '@ele/ipc/handle/i18n'
 import {
   BASE_CALLBACK,
-  FUZZY_CALLBACK,
   type CommandCallback,
   type CommandCallbackEvent,
   type CommandCallbacks,
@@ -85,8 +82,7 @@ const createCommandRegister = (
   }
   COMMAND_TYPE[key] = type
   const callbacks: CommandCallbacks = {
-    [BASE_CALLBACK]: [callback, ''],
-    [FUZZY_CALLBACK]: [fuzzyCallback, '']
+    [BASE_CALLBACK]: [callback, fuzzyCallback]
   }
   COMMAND_MARK.set(mark, [type, callbacks])
   TYPE_MARK.set(type, mark)
@@ -100,7 +96,11 @@ const createCommandRegister = (
      * @param callback 指令回调
      * @param comment 指令注释 或 注释的 i18n key
      */
-    add(command: string, callback: CommandCallback, comment: string) {
+    add(
+      command: string,
+      callback: CommandCallback,
+      fuzzyCallback: FuzzyCommandCallback
+    ) {
       if (!cover && callbacks[command]) {
         console.warn(`指令标识 ${command} 重复注册`)
         return () => {
@@ -108,7 +108,7 @@ const createCommandRegister = (
         }
       }
       let hasDelete = false
-      callbacks[command] = [callback, comment]
+      callbacks[command] = [callback, fuzzyCallback]
       /**
        * 删除指令
        * 对于不允许覆盖的指令, 仅删除一次
@@ -143,6 +143,8 @@ const initCommandRegister = () => {
     }
   )
 
+  global?.add('language', globalCB.language, globalCB.languageFuzzy)
+
   createCommandRegister(
     'WORKSPACE_TEXT',
     'workspace text',
@@ -150,7 +152,13 @@ const initCommandRegister = () => {
     (_, node) => {
       console.warn('WORKSPACE_TEXT command', node)
     },
-    async () => [],
+    async () => [
+      {
+        command: '%',
+        comment: '搜索文本',
+        type: 'fill'
+      }
+    ],
     {
       cover: false
     }
@@ -240,16 +248,54 @@ const parseAndRun = (command: string, event: CommandEvent) => {
 const fuzzyParseCommand = async (
   fullCommand: string,
   event: IpcMainInvokeEvent
-): Promise<[string, Comment[]]> => {
+): Promise<[string, Comment[]][]> => {
   const [command, command2, ...tokens] = fullCommand
     .split(' ')
     .filter((item) => item !== '')
   if (COMMAND_MARK.has(command)) {
     const [, callbacks] = COMMAND_MARK.get(command)!
 
-    const getFuzzyComments = callbacks[
-      FUZZY_CALLBACK
-    ][0] as FuzzyCommandCallback
+    const possibleCommands = Object.keys(callbacks).filter(
+      (key: string | symbol) =>
+        typeof key === 'string' && key.includes(command2)
+    )
+
+    // 仅当指令为空时, 返回所有指令
+    // 如果指令不为空, 且没有找到指令, 则返回空数组
+    if (possibleCommands.length === 0 && !command2) {
+      possibleCommands.push(
+        ...Object.keys(callbacks).filter(
+          (key: string | symbol) => typeof key === 'string'
+        )
+      )
+    }
+
+    const fuzzyComments: Comment[] = []
+
+    for (const key of possibleCommands) {
+      const fuzzyCB = callbacks[key as keyof typeof callbacks][1]
+      fuzzyComments.push(
+        ...(await fuzzyCB(
+          {
+            reply: event.sender.send.bind(event.sender),
+            getTitle: event.sender.getTitle,
+            focus: event.sender.focus,
+            isFocused: event.sender.isFocused,
+            send: event.sender.send.bind(event.sender)
+          },
+          {
+            type: COMMAND_TYPE.GLOBAL,
+            mark: command,
+            command: command2,
+            tokens: tokens
+          }
+        ))
+      )
+    }
+
+    if (fuzzyComments.length > 0) return [[command, fuzzyComments]]
+
+    const getFuzzyComments = callbacks[BASE_CALLBACK][1] as FuzzyCommandCallback
     const comments = await getFuzzyComments(
       {
         reply: event.sender.send.bind(event.sender),
@@ -265,14 +311,18 @@ const fuzzyParseCommand = async (
         tokens: tokens
       }
     )
-    if (comments.length > 0) return [command, comments]
+    return [[command, comments]]
+  }
+
+  const mark = Array.from(MARK_LIST).find((item) => command?.startsWith(item))
+  if (mark && COMMAND_MARK.has(mark)) {
+    const [, callbacks] = COMMAND_MARK.get(mark)!
 
     const possibleCommands = Object.keys(callbacks).filter(
       (key: string | symbol) =>
-        typeof key === 'string' && key.includes(command2)
+        typeof key === 'string' && key.includes(command.slice(mark.length))
     )
-    // 仅当指令为空时, 返回所有指令
-    // 如果指令不为空, 且没有找到指令, 则返回空数组
+
     if (possibleCommands.length === 0 && !command2) {
       possibleCommands.push(
         ...Object.keys(callbacks).filter(
@@ -280,32 +330,33 @@ const fuzzyParseCommand = async (
         )
       )
     }
-    return [
-      command,
-      possibleCommands.map((key) => {
-        const lang = useI18n().getLanguage()
-        const comment = callbacks[key as keyof typeof callbacks][1]
-        if (lang) {
-          return {
-            command: key,
-            comment: getValue(lang, comment, comment)
-          }
-        } else {
-          return {
-            command: key,
-            comment
-          }
-        }
-      })
-    ]
-  }
-  const mark = Array.from(MARK_LIST).find((item) => command?.startsWith(item))
-  if (mark && COMMAND_MARK.has(mark)) {
-    const [, callbacks] = COMMAND_MARK.get(mark)!
 
-    const getFuzzyComments = callbacks[
-      FUZZY_CALLBACK
-    ][0] as FuzzyCommandCallback
+    const fuzzyComments: Comment[] = []
+
+    for (const key of possibleCommands) {
+      const fuzzyCB = callbacks[key as keyof typeof callbacks][1]
+      fuzzyComments.push(
+        ...(await fuzzyCB(
+          {
+            reply: event.sender.send,
+            getTitle: event.sender.getTitle,
+            focus: event.sender.focus,
+            isFocused: event.sender.isFocused,
+            send: event.sender.send
+          },
+          {
+            type: COMMAND_TYPE.GLOBAL,
+            mark: mark,
+            command: command.slice(mark.length),
+            tokens: [command2, ...tokens]
+          }
+        ))
+      )
+    }
+
+    if (fuzzyComments.length > 0) return [[mark, fuzzyComments]]
+
+    const getFuzzyComments = callbacks[BASE_CALLBACK][1] as FuzzyCommandCallback
     const comments = await getFuzzyComments(
       {
         reply: event.sender.send,
@@ -321,35 +372,37 @@ const fuzzyParseCommand = async (
         tokens: [command2, ...tokens]
       }
     )
-    if (comments.length > 0) return [command, comments]
-
-    const possibleCommands = Object.keys(callbacks).filter(
-      (key: string | symbol) =>
-        typeof key === 'string' && key.includes(command.slice(mark.length))
-    )
-    return [
-      mark,
-      possibleCommands.map((key) => {
-        const lang = useI18n().getLanguage()
-        const comment = callbacks[key as keyof typeof callbacks][1]
-        if (lang) {
-          return {
-            command: key,
-            comment: getValue(lang, comment, comment)
-          }
-        } else {
-          return {
-            command: key,
-            comment
-          }
-        }
-      })
-    ]
+    return [[command, comments]]
   }
 
-  // TODO: 针对%指令, 需要查找工作区文本并返回
+  const commandMarksCommandBaseComments: [string, Comment[]][] = []
+
+  for (const mark of MARK_LIST) {
+    const [, callbacks] = COMMAND_MARK.get(mark)!
+
+    const getFuzzyComments = callbacks[BASE_CALLBACK][1] as FuzzyCommandCallback
+    const comments = await getFuzzyComments(
+      {
+        reply: event.sender.send,
+        getTitle: event.sender.getTitle,
+        focus: event.sender.focus,
+        isFocused: event.sender.isFocused,
+        send: event.sender.send
+      },
+      {
+        type: COMMAND_TYPE.FILE,
+        mark: '',
+        command: command,
+        tokens: [command2, ...tokens]
+      }
+    )
+    commandMarksCommandBaseComments.push([mark, comments])
+  }
+
   // TODO: 认为是文件指令, 此处查找工作区文件, 返回相对路径
-  return ['file', []]
+  commandMarksCommandBaseComments.push(['file', []])
+
+  return commandMarksCommandBaseComments
 }
 
 const useCommand = singleRun(() => {

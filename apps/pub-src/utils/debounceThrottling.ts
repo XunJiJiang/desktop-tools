@@ -7,6 +7,8 @@ export const debounce = <T extends (...args: any[]) => unknown>(
   return (...args: Parameters<T>) => {
     if (timer) {
       clearTimeout(timer)
+    } else {
+      fn(...args)
     }
     timer = setTimeout(() => {
       fn(...args)

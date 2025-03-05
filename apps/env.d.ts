@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /// <reference types="vite/client" />
 
-
+type CommentType = import('@/types/command').Comment
 type MenuItem = import('@/types/menu').MenuItem
 type PathName = import('@/types/path').PathName
 type QueryParam = import('@/types/sqlite').QueryParam
@@ -87,11 +87,9 @@ interface Listener<UnListen = void> {
     listener: (
       event: IpcRendererEvent,
       data: {
-        items: {
-          value: string
-          command: string | null
-          info: any
-        }[]
+        items: (CommentType & {
+          data: any
+        })[]
       }
     ) => void
   ): UnListen
@@ -109,9 +107,12 @@ interface Send {
 
   (channel: 'command:parseAndRun', fullCommand: string): void
 
-  (channel: 'menu:context', data: {
-    items: MenuItem[]
-  }): void
+  (
+    channel: 'menu:context',
+    data: {
+      items: MenuItem[]
+    }
+  ): void
 
   (
     channel: 'app-region:drag',
@@ -213,7 +214,7 @@ interface Invoke {
   (
     channel: 'command:fuzzyParse',
     fullCommand: string
-  ): Promise<[string, import('@/types/command.d.ts').Comment[]]>
+  ): Promise<[string, import('@/types/command.d.ts').Comment[]][]>
 
   (channel: 'cursor:getPosition'): Promise<{
     x: number

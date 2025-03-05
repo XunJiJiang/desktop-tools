@@ -38,12 +38,13 @@ export type FuzzyCommandCallback = (
 ) => Comment[] | Promise<Comment[]>
 
 export const BASE_CALLBACK: symbol = Symbol('base callback')
-export const FUZZY_CALLBACK: symbol = Symbol('fuzzy callback')
 
 /**
  * [command]: [callback, comment]
  */
-export type CommandCallbacks = Record<string, [CommandCallback, string]> & {
-  [BASE_CALLBACK]: [CommandCallback, string]
-  [FUZZY_CALLBACK]: [FuzzyCommandCallback, string]
+export type CommandCallbacks = Record<
+  string,
+  [CommandCallback, FuzzyCommandCallback]
+> & {
+  [BASE_CALLBACK]: [CommandCallback, FuzzyCommandCallback]
 }

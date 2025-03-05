@@ -5,6 +5,30 @@ export const language: CommandCallback = async (win, node) => {
   win.reply('language:change', node.tokens[0])
 }
 
+export const languageFuzzy: FuzzyCommandCallback = async (_, node) => {
+  const command =
+    node.mark +
+    (node.command
+      ? ' ' +
+        node.command +
+        (node.tokens?.length > 0 ? ' ' + node.tokens.join(' ') : '')
+      : '')
+  return [
+    {
+      command: '> language zh-CN',
+      comment: '切换语言为中文',
+      type: 'run'
+    },
+    {
+      command: '> language en-US',
+      comment: 'switch language to English',
+      type: 'run'
+    }
+  ].filter((item) =>
+    item.command.includes(command)
+  ) as ReturnType<FuzzyCommandCallback>
+}
+
 const other: CommandCallback = async (win, node) => {
   if (node.command === 'search') {
     if (node.tokens[0] === 'open') {
@@ -22,38 +46,25 @@ const other: CommandCallback = async (win, node) => {
 
 export const command: CommandCallback = (win, node) => {
   switch (node.command) {
-    case 'language':
-      language(win, node)
-      break
     default:
       other(win, node)
       break
   }
 }
 
-export const fuzzyCommand: FuzzyCommandCallback = (_, node) => {
-  const command =
-    node.mark +
-    (node.command
-      ? ' ' +
-        node.command +
-        (node.tokens?.length > 0 ? ' ' + node.tokens.join(' ') : '')
-      : '')
-  console.log('fuzzyCommand', command, node.tokens)
+export const fuzzyCommand: FuzzyCommandCallback = () => {
   return [
     {
-      command: '> language zh-CN',
-      comment: '切换语言为中文'
-    },
-    {
-      command: '> language en-US',
-      comment: 'switch language to English'
+      command: '>',
+      comment: '显示并运行指令',
+      type: 'fill'
     }
-  ].filter((item) => item.command.includes(command))
+  ]
 }
 
 export default {
   command,
   fuzzyCommand,
-  language
+  language,
+  languageFuzzy
 }
