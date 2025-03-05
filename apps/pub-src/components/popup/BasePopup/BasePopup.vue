@@ -18,14 +18,8 @@ const {
   height,
   zIndex,
   beyondViewport = () => {}
-} = defineProps<{
-  x: number
-  y: number
-  width: number | null
-  height: number | null
-  zIndex: number
-  beyondViewport?: (data: { width: number; height: number }) => void
-}>()
+} = defineProps<BasePopupProps>()
+
 const visible = defineModel<boolean>('visible', { required: true })
 const basePopupRef = useTemplateRef<HTMLDivElement>('base-popup-ref')
 const xPx = computed(() => `${x}px`)
@@ -79,24 +73,13 @@ onMounted(() => {
   z-index: v-bind(zIndex);
   pointer-events: auto;
 
-  animation: fadeIn 0.1s ease;
-
-  .base-popup__content {
+  &.base-popup__content {
     width: 100%;
     height: 100%;
     overflow: auto;
     background-color: transparent;
     border-radius: 4px;
     box-shadow: 0 0 10px var(--base-popup-box-shadow, $base-popup-box-shadow);
-  }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
   }
 }
 </style>

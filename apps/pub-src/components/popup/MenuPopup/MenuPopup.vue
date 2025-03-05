@@ -64,8 +64,9 @@ const clickHandler = (item: MenuItem, e: MouseEvent) => {
 }
 
 const mouseenterHandle = (item: MenuItem, index: number, e: MouseEvent) => {
+  let delay = 150
   if (lastChildItemIndex.value === index) {
-    return
+    delay = 0
   }
   if (childPopup.value) {
     childPopup.value.hide(e)
@@ -85,15 +86,23 @@ const mouseenterHandle = (item: MenuItem, index: number, e: MouseEvent) => {
 
         let x = _x + (e.target as HTMLButtonElement).offsetWidth
 
+        let y = _y - 6
+
         if (x + width > window.innerWidth) {
-          if (_x - width < 0) {
-            x = _x
-          } else {
+          if (_x - width > 0) {
             x = _x - width
+          } else {
+            if (width < window.innerWidth) {
+              x = _x - 6
+              if (x + width > window.innerWidth) {
+                x = window.innerWidth - width - 2
+              }
+            } else {
+              x = 0
+            }
+            y += (e.target as HTMLButtonElement).offsetHeight + 6
           }
         }
-
-        let y = _y - 6
 
         if (y + height > window.innerHeight) {
           y = window.innerHeight - height - 2
@@ -107,7 +116,7 @@ const mouseenterHandle = (item: MenuItem, index: number, e: MouseEvent) => {
           (e.target as HTMLButtonElement).offsetWidth,
         y: (e.target as HTMLButtonElement).getBoundingClientRect().y - 6
       },
-      150
+      delay
     )
   }
 }

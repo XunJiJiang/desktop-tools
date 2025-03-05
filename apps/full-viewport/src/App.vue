@@ -130,7 +130,8 @@ const commandChange = async (e: Event) => {
               label: '子菜单1',
               submenu: [
                 {
-                  label: '子菜单1-1',
+                  label:
+                    '子菜单1-1: 123987qwiouqwdgfqoiqwoiqwoiqwoi123987qwiouqwdgfqoiqwoiqwoiqwoi',
                   submenu: [
                     {
                       label: '子菜单1-1-1'
