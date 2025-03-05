@@ -37,7 +37,7 @@ export default {
   mounted(el, binding) {
     map.set(el, (e) => {
       e.preventDefault()
-      if (isMac) {
+      if (!isMac) {
         ipc.send('menu:context', {
           items: binding.value
         })

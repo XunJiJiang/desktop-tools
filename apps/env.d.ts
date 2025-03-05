@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /// <reference types="vite/client" />
 
+
+type MenuItem = import('@/types/menu').MenuItem
 type PathName = import('@/types/path').PathName
 type QueryParam = import('@/types/sqlite').QueryParam
 type InsertParam = import('@/types/sqlite').InsertParam
@@ -107,7 +109,9 @@ interface Send {
 
   (channel: 'command:parseAndRun', fullCommand: string): void
 
-  (channel: 'menu:context'): void
+  (channel: 'menu:context', data: {
+    items: MenuItem[]
+  }): void
 
   (
     channel: 'app-region:drag',

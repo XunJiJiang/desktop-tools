@@ -10,9 +10,6 @@
   "tooltip-border": "#6e6e6e",
   "tooltip-font": "#fff",
   "tooltip-box-shadow": "#0005",
-  "menu-btn-hover-bg": "#99999966",
-  "menu-btn-font": "#fff",
-  "menu-btn-active-border": "#7a7a7a",
   "base-popup-bg": "#2f2f2fcc",
   "base-popup-border": "#6e6e6e",
   "base-popup-font": "#fff",
@@ -20,5 +17,11 @@
   "base-popup-hover-bg": "#aaaaaa22",
   "base-input-border": "#2592ffbf",
   "base-input-focus-border": "#2592ff",
-  "base-input-focus-shadow": "#2592ff86"
+  "base-input-focus-shadow": "#2592ff86",
+  "menu-btn-hover-bg": "#99999966",
+  "menu-btn-font": "#fff",
+  "menu-btn-active-border": "#7a7a7a",
+  "menu-popup-button-hover": "#2c58ba",
+  "menu-popup-button-active": "#2c59babd",
+  "menu-popup-button-focus": "#ffffff22"
 }

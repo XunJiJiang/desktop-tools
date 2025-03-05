@@ -75,11 +75,6 @@ const commandChange = async (e: Event) => {
   const command = (e.target as HTMLInputElement).value
   console.log(await ipc.invoke('command:fuzzyParse', command))
 }
-
-const rightClickHandler = (e: MouseEvent) => {
-  e.preventDefault()
-  ipc.send('menu:context')
-}
 </script>
 
 <template>
@@ -125,13 +120,43 @@ const rightClickHandler = (e: MouseEvent) => {
         </form>
       </div>
     </main>
-    <div class="menu-test" @contextmenu="rightClickHandler">右键菜单测试</div>
+    <div
+      class="menu-test"
+      v-contextmenu="[
+        {
+          label: '右键菜单测试',
+          submenu: [
+            {
+              label: '子菜单1',
+              submenu: [
+                {
+                  label: '子菜单1-1',
+                  submenu: [
+                    {
+                      label: '子菜单1-1-1'
+                    }
+                  ]
+                },
+                {
+                  label: '子菜单1-2'
+                }
+              ]
+            },
+            {
+              label: '子菜单2'
+            }
+          ]
+        }
+      ]"
+    >
+      右键菜单测试
+    </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
 .menu-test {
-  width: 200px;
+  width: 100vw;
   height: 100px;
   background-color: #b1c29ebf;
 }

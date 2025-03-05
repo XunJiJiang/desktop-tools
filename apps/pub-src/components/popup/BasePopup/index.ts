@@ -1,4 +1,4 @@
-import BasePopup from './BasePopup.vue'
+import BasePopup, { type BasePopupProps } from './BasePopup.vue'
 import {
   createVNode,
   ref,
@@ -31,7 +31,8 @@ export const createBasePopup = (
   slot: VNode,
   opt: Partial<Size & Position> & {
     zIndex?: number
-  }
+  },
+  beyondViewport?: BasePopupProps['beyondViewport']
 ) => {
   const {
     x: baseX,
@@ -161,6 +162,27 @@ export const createBasePopup = (
                   visible: _visible,
                   'onUpdate:visible': (v: boolean) => {
                     visible.value = v
+                  },
+                  beyondViewport: ({
+                    width,
+                    height
+                  }: {
+                    width: number
+                    height: number
+                  }) => {
+                    beyondViewport?.({ width, height })
+
+                    if (cursorX.value + width > window.innerWidth) {
+                      if (cursorX.value - width > 0) {
+                        cursorX.value -= width
+                      } else {
+                        cursorX.value = window.innerWidth - width
+                      }
+                    }
+
+                    if (cursorY.value + height > window.innerHeight) {
+                      cursorY.value = window.innerHeight - height
+                    }
                   },
                   key
                 },

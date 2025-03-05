@@ -1,13 +1,30 @@
-<script lang="ts"></script>
-
-<script lang="ts" setup>
-import { computed, useTemplateRef } from 'vue'
-const { x, y, width, height, zIndex } = defineProps<{
+<script lang="ts">
+export type BasePopupProps = {
   x: number
   y: number
   width: number | null
   height: number | null
   zIndex: number
+  beyondViewport?: (data: { width: number; height: number }) => void
+}
+</script>
+
+<script lang="ts" setup>
+import { computed, useTemplateRef, onMounted } from 'vue'
+const {
+  x,
+  y,
+  width,
+  height,
+  zIndex,
+  beyondViewport = () => {}
+} = defineProps<{
+  x: number
+  y: number
+  width: number | null
+  height: number | null
+  zIndex: number
+  beyondViewport?: (data: { width: number; height: number }) => void
 }>()
 const visible = defineModel<boolean>('visible', { required: true })
 const basePopupRef = useTemplateRef<HTMLDivElement>('base-popup-ref')
@@ -17,6 +34,20 @@ const widthPx = computed(() => (width ? `${width}px` : 'auto'))
 const heightPx = computed(() => (height ? `${height}px` : 'auto'))
 defineExpose({
   ref: basePopupRef
+})
+onMounted(() => {
+  if (!basePopupRef.value) return
+  const winHeight = window.innerHeight
+  const winWidth = window.innerWidth
+  const rect = basePopupRef.value
+  if (
+    rect.offsetWidth + x > winWidth ||
+    rect.offsetWidth < winWidth ||
+    rect.offsetHeight + y > winHeight ||
+    rect.offsetHeight < winHeight
+  ) {
+    beyondViewport({ width: rect.offsetWidth, height: rect.offsetHeight })
+  }
 })
 </script>
 
@@ -48,6 +79,8 @@ defineExpose({
   z-index: v-bind(zIndex);
   pointer-events: auto;
 
+  animation: fadeIn 0.1s ease;
+
   .base-popup__content {
     width: 100%;
     height: 100%;
@@ -55,6 +88,15 @@ defineExpose({
     background-color: transparent;
     border-radius: 4px;
     box-shadow: 0 0 10px var(--base-popup-box-shadow, $base-popup-box-shadow);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 </style>

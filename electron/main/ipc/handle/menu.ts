@@ -60,7 +60,6 @@ const useMenu = singleRun(() => {
     return menu ?? []
   })
 
-  // TODO
   ipcMain.on(
     'menu:context',
     (
@@ -69,7 +68,7 @@ const useMenu = singleRun(() => {
         items: MenuItem[]
       }
     ) => {
-      createMenuPopup(data.items)
+      createMenuPopup(data?.items ?? [])
     }
   )
 

@@ -14,24 +14,23 @@ const { items: _items, createMenuPopup } = defineProps<{
   createMenuPopup: (
     menu: MenuItem[],
     onClick: (item: MenuItem, e: MouseEvent) => void,
+    beyondViewport: (
+      width: number,
+      height: number
+    ) => {
+      x: number
+      y: number
+    },
     position?: {
       x: number
       y: number
-    }
+    },
+    delay?: number
   ) => Omit<ReturnType<typeof createBasePopup>, 'hide'> & MenuPopupExposed
 }>()
+
 const emit = defineEmits<{
   choose: [item: MenuItem, e: MouseEvent]
-  createMenuPopup: [
-    item: MenuItem[],
-    (item: MenuItem, e: MouseEvent) => void,
-    opt: {
-      x?: number
-      y?: number
-      width?: number
-      height?: number
-    }
-  ]
 }>()
 
 const items = computed(() => {
@@ -51,7 +50,7 @@ const items = computed(() => {
 const childPopup = ref<
   (Omit<ReturnType<typeof createBasePopup>, 'hide'> & MenuPopupExposed) | null
 >(null)
-const lastChildItem = ref<MenuItem | null>(null)
+const lastChildItemIndex = ref<number | null>(null)
 
 // const menuPopupRef = useTemplateRef<HTMLDivElement>('menu-popup-ref')
 
@@ -64,29 +63,51 @@ const clickHandler = (item: MenuItem, e: MouseEvent) => {
   }
 }
 
-const mouseenterHandle = (item: MenuItem, e: MouseEvent) => {
-  if (lastChildItem.value === item) {
+const mouseenterHandle = (item: MenuItem, index: number, e: MouseEvent) => {
+  if (lastChildItemIndex.value === index) {
     return
   }
   if (childPopup.value) {
     childPopup.value.hide(e)
     childPopup.value = null
-    lastChildItem.value = null
+    lastChildItemIndex.value = null
   }
   if (Array.isArray(item.submenu) && item.submenu.length > 0) {
-    lastChildItem.value = item
+    lastChildItemIndex.value = index
     childPopup.value = createMenuPopup(
       item.submenu,
       (item) => {
         emit('choose', item, e)
       },
-      // TODO: 需要计算位置, 防止超出屏幕
+      (width, height) => {
+        const _x = (e.target as HTMLButtonElement).getBoundingClientRect().x
+        const _y = (e.target as HTMLButtonElement).getBoundingClientRect().y
+
+        let x = _x + (e.target as HTMLButtonElement).offsetWidth
+
+        if (x + width > window.innerWidth) {
+          if (_x - width < 0) {
+            x = _x
+          } else {
+            x = _x - width
+          }
+        }
+
+        let y = _y - 6
+
+        if (y + height > window.innerHeight) {
+          y = window.innerHeight - height - 2
+        }
+
+        return { x, y }
+      },
       {
         x:
           (e.target as HTMLButtonElement).getBoundingClientRect().x +
           (e.target as HTMLButtonElement).offsetWidth,
         y: (e.target as HTMLButtonElement).getBoundingClientRect().y - 6
-      }
+      },
+      150
     )
   }
 }
@@ -107,16 +128,17 @@ defineExpose({
   <div class="menu-popup" ref="menu-popup-ref">
     <ul>
       <li
-        v-for="_item in items"
+        v-for="(_item, index) in items"
         :key="_item.label"
         :class="{
           separator: _item.type === 'separator',
-          hasSubmenu: Array.isArray(_item.submenu) && _item.submenu.length > 0
+          hasSubmenu: Array.isArray(_item.submenu) && _item.submenu.length > 0,
+          focused: lastChildItemIndex === index
         }"
       >
         <button
           @mouseup="clickHandler(_item, $event)"
-          @mouseenter="mouseenterHandle(_item, $event)"
+          @mouseenter="mouseenterHandle(_item, index, $event)"
         >
           {{ _item.label }}
           <span class="icon-right">
@@ -143,6 +165,7 @@ defineExpose({
   align-items: center;
   user-select: none;
   color: var(--menu-btn-font, $menu-btn-font);
+  max-height: calc(100vh - 36px);
 }
 
 ul {
@@ -160,6 +183,8 @@ li {
   line-height: 22px;
   box-sizing: border-box;
   cursor: pointer;
+
+  white-space: nowrap;
 
   &.separator {
     border-top: 1px solid var(--base-popup-border, $base-popup-border);
@@ -194,6 +219,15 @@ li {
         width: 10px;
         line-height: 22px;
       }
+    }
+  }
+
+  &.focused {
+    & button {
+      background-color: var(
+        --menu-popup-button-focus,
+        $menu-popup-button-focus
+      );
     }
   }
 

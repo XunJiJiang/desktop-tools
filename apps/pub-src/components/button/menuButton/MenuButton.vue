@@ -1,5 +1,5 @@
 <script lang="ts">
-import { createMenuPopup, type MenuItem } from '../../popup/MenuPopup'
+import { createMenuPopup, type MenuItem } from '@comp/popup/MenuPopup'
 import { windowEvent } from '@apps/utils/windowEvent'
 import ipc from '@apps/utils/ipc'
 export type { MenuItem }
@@ -61,12 +61,12 @@ const cssVar = useCssVar()
 const style = useStyle()
 const fontFamily = computed(() => style.style['font-family'])
 const menuBarRef = useTemplateRef<HTMLDivElement>('menu-bar-ref')
-let control: ReturnType<typeof createMenuPopup> | null = null
+const control = ref<ReturnType<typeof createMenuPopup> | null>(null)
 const hidePopup = (e?: MouseEvent) => {
-  const hasHide = control?.hide(e ?? new MouseEvent(''))
+  const hasHide = control.value?.hide(e ?? new MouseEvent(''))
   if (hasHide) {
     emit('hide', item)
-    control = null
+    control.value = null
     unListener()
   }
 }
@@ -77,18 +77,28 @@ watch(isFocused, (v) => {
   }
 })
 
+const OVERLAP = 3
+
 let unListener = () => {}
 const openMenuPopup = () => {
-  if (control) return
+  if (control.value) return
 
-  control = createMenuPopup(
+  control.value = createMenuPopup(
     item.submenu ?? [],
     (item) => {
       emit('click', item)
       hidePopup()
     },
+    () => {
+      return {
+        x: (menuBarRef.value?.getBoundingClientRect().x ?? 0) - OVERLAP,
+        y:
+          (menuBarRef.value?.getBoundingClientRect().y ?? 0) +
+          (menuBarRef.value?.offsetHeight ?? 0)
+      }
+    },
     {
-      x: menuBarRef.value?.getBoundingClientRect().x ?? 0,
+      x: (menuBarRef.value?.getBoundingClientRect().x ?? 0) - OVERLAP,
       y:
         (menuBarRef.value?.getBoundingClientRect().y ?? 0) +
         (menuBarRef.value?.offsetHeight ?? 0)
@@ -100,7 +110,7 @@ const openMenuPopup = () => {
   })
 }
 const switchMenuPopup = () => {
-  if (control || !hoverShow) return
+  if (control.value || !hoverShow) return
   openMenuPopup()
 }
 onMounted(() => {
@@ -122,8 +132,8 @@ const iconName = computed(() => {
 const iconColor = computed(() => cssVar.vars['menu-btn-font'])
 defineExpose({
   hide: () => {
-    control?.hide(new MouseEvent(''))
-    control = null
+    control.value?.hide(new MouseEvent(''))
+    control.value = null
     unListener()
   }
 })
@@ -134,7 +144,8 @@ defineExpose({
     ref="menu-bar-ref"
     :class="{
       'menu-btn': true,
-      'ready-to-focus': readyToFocus
+      'ready-to-focus': readyToFocus,
+      active: control
     }"
   >
     <button v-if="isIcon" @click="openMenuPopup" @mouseenter="switchMenuPopup">
@@ -182,7 +193,8 @@ $overlap: 3px;
     width: calc(100% + #{$overlap} * 2);
     border-radius: 4px;
     z-index: -1;
-    background-color: #0000;
+    background-color: transparent;
+    pointer-events: none;
   }
 }
 
