@@ -13,6 +13,7 @@ export const languageFuzzy: FuzzyCommandCallback = async (_, node) => {
         node.command +
         (node.tokens?.length > 0 ? ' ' + node.tokens.join(' ') : '')
       : '')
+  console.log(command, node)
   return [
     {
       command: '> language zh-CN',
@@ -24,9 +25,10 @@ export const languageFuzzy: FuzzyCommandCallback = async (_, node) => {
       comment: 'switch language to English',
       type: 'run'
     }
-  ].filter((item) =>
-    item.command.includes(command)
-  ) as ReturnType<FuzzyCommandCallback>
+  ].filter((item) => {
+    console.log(item.command.includes(command))
+    return item.command.includes(command)
+  }) as ReturnType<FuzzyCommandCallback>
 }
 
 const other: CommandCallback = async (win, node) => {

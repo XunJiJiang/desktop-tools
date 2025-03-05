@@ -23,5 +23,6 @@
   "menu-btn-active-border": "#7a7a7a",
   "menu-popup-button-hover": "#2c58ba",
   "menu-popup-button-active": "#2c59babd",
-  "menu-popup-button-focus": "#ffffff22"
+  "menu-popup-button-focus": "#ffffff22",
+  "search-popup-focus": "#2c59ba88"
 }

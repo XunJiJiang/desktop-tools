@@ -348,7 +348,7 @@ const fuzzyParseCommand = async (
             type: COMMAND_TYPE.GLOBAL,
             mark: mark,
             command: command.slice(mark.length),
-            tokens: [command2, ...tokens]
+            tokens: command2 ? [command2, ...tokens] : []
           }
         ))
       )
@@ -369,7 +369,7 @@ const fuzzyParseCommand = async (
         type: COMMAND_TYPE.GLOBAL,
         mark: mark,
         command: command.slice(mark.length),
-        tokens: [command2, ...tokens]
+        tokens: command2 ? [command2, ...tokens] : []
       }
     )
     return [[command, comments]]
@@ -391,9 +391,9 @@ const fuzzyParseCommand = async (
       },
       {
         type: COMMAND_TYPE.FILE,
-        mark: '',
-        command: command,
-        tokens: [command2, ...tokens]
+        mark,
+        command: '',
+        tokens: []
       }
     )
     commandMarksCommandBaseComments.push([mark, comments])
